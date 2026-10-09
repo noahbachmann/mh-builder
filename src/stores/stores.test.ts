@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import { db } from '../data'
 import { useBuildStore } from './build'
+import { MAX_COMPARED, useCompareStore } from './compare'
 import { usePreviewStore } from './preview'
 import { useSavedStore } from './saved'
 import { useUiStore } from './ui'
@@ -90,5 +91,38 @@ describe('ui store', () => {
     ui.openSlot('legs')
     expect(ui.screen).toBe('armor')
     expect(ui.selectedSlot).toBe('legs')
+  })
+})
+
+describe('compare store', () => {
+  const code = (id: number) => `1.${id.toString(36)}`
+
+  it('current build is the first column, then selected saved builds', async () => {
+    const saved = useSavedStore()
+    const a = saved.save('A', code(gs1.id))
+    const b = saved.save('B', code(gs2.id))
+    const c = useCompareStore()
+    c.toggle(b.id)
+    c.toggle(a.id)
+    expect(c.columns.map((x) => x.name)).toEqual(['Current build', 'B', 'A'])
+    expect(c.columns[2]!.stats.weapon?.attack).toBe(624)
+    expect(c.comparison.metrics.find((m) => m.key === 'attack')!.values).toEqual([null, 816, 624])
+
+    c.toggle(b.id)
+    expect(c.selected).toEqual([a.id])
+    await nextTick()
+    expect(JSON.parse(localStorage.getItem('mhw-builder.compare')!)).toEqual([a.id])
+  })
+
+  it(`caps at ${MAX_COMPARED} and drops deleted builds`, async () => {
+    const saved = useSavedStore()
+    const ids = [1, 2, 3, 4].map((i) => saved.save(`B${i}`, code(gs1.id)).id)
+    const c = useCompareStore()
+    ids.forEach((id) => c.toggle(id))
+    expect(c.selected).toHaveLength(MAX_COMPARED)
+    expect(c.isFull).toBe(true)
+    saved.remove(ids[0]!)
+    await nextTick()
+    expect(c.selected).toEqual(ids.slice(1, 3))
   })
 })

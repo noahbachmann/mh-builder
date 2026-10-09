@@ -4,6 +4,7 @@
  *
  *   1-7       open Weapon / Head / Chest / Arms / Waist / Legs / Charm
  *   D         open Decorations
+ *   C         compare saved builds
  *   Q / E     previous / next sidebar tab
  *   [ / ]     previous / next sub-tab of the open screen (weapon type, rank, equipment piece)
  *   /         focus search
@@ -23,6 +24,7 @@ export const SHORTCUTS: [string, string][] = [
   ['Esc', 'Back'],
   ['1 – 7', 'Weapon, Head, Chest, Arms, Waist, Legs, Charm'],
   ['D', 'Decorations'],
+  ['C', 'Compare saved builds'],
   ['Q / E', 'Previous / next sidebar tab'],
   ['[ / ]', 'Previous / next weapon type, rank or equipment piece'],
   ['Tab', 'Next panel'],
@@ -93,6 +95,9 @@ export function installKeyboard(): () => void {
       focusCenter()
     } else if (key === 'd') {
       ui.openDecorations()
+      focusCenter()
+    } else if (key === 'c') {
+      ui.screen = 'compare'
       focusCenter()
     } else if (key === 'q') ui.cycleTab(-1)
     else if (key === 'e') ui.cycleTab(1)
