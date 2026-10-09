@@ -9,5 +9,6 @@ No Vue imports. Everything takes a `DataIndex` (`src/data/index.ts`) so tests ca
 - `weapon-stats.ts`: true raw = base x multipliers + flat; element = base x % + flat. Hidden element needs Free Element. NEB only without active element (bowguns: no elemental ammo). Sharpness stored at Handicraft 5, trimmed from the top.
 - `efr.ts`: EFR/EFE with breakdowns. Gunners sharpness 1.0. Element crit only on positive affinity.
 - `evaluate.ts`: one call -> `BuildStats` (skills, weapon, efr, efe, defense). `build-diff.ts` diffs two `BuildStats` for hover compare.
+- `build-compare.ts`: `compareBuilds(entries)` -> metric rows (values, `best` indices, deltas vs first build; higher is always better; no `best` on full ties), skill + set bonus matrix. `evaluateForCompare` adds a `potential` evaluation with `includeConditional` (EFR with every situational skill active).
 - `tree-layout.ts`: band per root, col = depth, DFS rows. `edgePath` makes elbow SVG paths.
 - `build-codec.ts`: `1.` + 7 `_`-joined items, base36 ids, `-` decos, `x` empty. Decoder drops invalid parts.

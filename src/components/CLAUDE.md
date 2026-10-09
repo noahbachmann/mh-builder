@@ -1,7 +1,8 @@
 # src/components — UI (display only, math lives in src/engine)
 
 - `App.vue` (in `src/`) is the 3-column grid: `left/` (SlotList, BuildManager), center screen chosen by `ui.screen`, `sidebar/`.
-- `center/`: `WeaponTree` (type tabs, bands, SVG edges from `engine/tree-layout`, search), `ArmorPicker` (rank tabs), `CharmPicker`, `DecorationScreen` (slot column + deco list filtered by size), `BuildOverview` (default screen: equipment, EFR/EFE breakdown, skill descriptions).
+- `center/`: `WeaponTree` (type tabs, bands, SVG edges from `engine/tree-layout`, search), `ArmorPicker` (rank tabs), `CharmPicker`, `DecorationScreen` (slot column + deco list filtered by size), `BuildOverview` (default screen: equipment, EFR/EFE breakdown, skill descriptions), `CompareScreen` (current build + up to 3 saved builds side by side, from `stores/compare.ts`).
+- `left/BuildManager`: saved builds (`stores/saved.ts`, localStorage codec strings), ⇄ toggles a build into the comparison (ids persisted under `mhw-builder.compare`).
 - `sidebar/`: `Sidebar` tabs -> `OverallStats`, `OverallSkills`, `SelectedEquipment` (two `EquipmentCard`s while previewing).
 - `base/`: `Icon` (registry id -> webp, falls back to placeholder then CSS initials), `SharpnessBar` (CSS), `SlotPips`, `Diff` (value + preview with ▲/▼).
 

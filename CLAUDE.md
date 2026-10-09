@@ -28,6 +28,7 @@ Everything is unlocked: every weapon and armor piece is available, and armor is 
 - EFR/EFE calculator.
 - Keyboard navigation and shortcuts alongside mouse (no gamepad: it's a website).
 - Saved builds (localStorage) and shareable builds (build encoded in the URL).
+- Build comparison: current build + up to 3 saved builds side by side (stats, skills, EFR/EFE incl. "all conditions met" EFR), best values highlighted.
 
 ### Later milestones
 - Situational toggles (Agitator active, Weakness Exploit on weakspot, Peak Performance at full HP, etc.).
@@ -65,6 +66,7 @@ src/
     efr.ts            EFR / EFE
     tree-layout.ts    weapon tree -> node grid positions + edges
     build-codec.ts    build <-> URL string
+    build-compare.ts  side-by-side comparison of several builds
   stores/         Pinia stores
   components/     slot list, right sidebar (tabs + compare window), center panel, item pickers, weapon tree, decoration screen
   input/          focus grid + keyboard shortcuts
@@ -158,7 +160,7 @@ The game shows the hunter model here. We use the space for information the game 
   - "Special" tab for Kulve Taroth and Safi'jiiva weapons (later milestone).
 - Controls (mouse or keyboard, defined in `src/input/keyboard.ts`, shown with `?` in the app):
   - Arrows move the cursor, Enter selects or equips, Esc goes back.
-  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `D` opens decorations.
+  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `D` opens decorations; `C` opens the build comparison.
   - `Q` / `E` switch the previous / next sidebar tab.
   - `[` / `]` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen).
   - Tab moves between panels; each panel keeps its own cursor (roving tabindex). `/` focuses search.
@@ -216,6 +218,8 @@ Package manager: pnpm. Keep this section in sync.
 - `test`: Vitest
 - `test:e2e`: Playwright (builds, then runs against `vite preview` on port 4199)
 - `data:import`: regenerate `src/data/` from the raw source
+
+CI (`.github/workflows/ci.yml`): every push and PRs to `main` run `build` (vue-tsc + vite) and `test`, then `test:e2e`; Playwright traces are uploaded on failure.
 
 ## Open decisions
 
