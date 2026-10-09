@@ -52,9 +52,10 @@ function nodeEl(id: number) {
 
 async function jumpTo(w: Weapon) {
   ui.weaponType = w.type
-  highlight.value = w.id
   query.value = ''
   await nextTick()
+  // after the type watcher has reset it
+  highlight.value = w.id
   const el = nodeEl(w.id)
   if (el) {
     focusCell(el)
