@@ -78,3 +78,16 @@ describe('generated data', () => {
     expect(safi.defense).toBe(206)
   })
 })
+
+describe('ids', () => {
+  it('are unique per category', () => {
+    for (const [name, list] of Object.entries(gameData)) {
+      const ids = (list as { id: unknown }[]).map((x) => x.id)
+      expect(new Set(ids).size, name).toBe(ids.length)
+    }
+  })
+
+  it('armor pieces belong to the set that lists them', () => {
+    for (const set of gameData.armorSets) for (const id of set.pieceIds) expect(db.armor.get(id)!.setId, set.name).toBe(set.id)
+  })
+})

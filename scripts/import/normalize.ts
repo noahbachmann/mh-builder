@@ -22,6 +22,11 @@ import type {
 export function slug(name: string): string {
   return name
     .toLowerCase()
+    // α/β/γ distinguish armor sets; keep them or ids collide
+    .replace(/α/g, ' alpha ')
+    .replace(/β/g, ' beta ')
+    .replace(/γ/g, ' gamma ')
+    .replace(/\+/g, ' plus ')
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/['’"]/g, '')
