@@ -19,7 +19,7 @@ Everything is unlocked: every weapon and armor piece is available, and armor is 
 ## Scope
 
 ### v1
-- Equipment screen replicating the in-game layout and behavior: slot list (Weapon, Head, Chest, Arms, Waist, Legs, Charm), stat sheet, skills summary, hover-to-compare.
+- Equipment screen replicating the in-game layout and behavior: slot list (Weapon, Head, Chest, Arms, Waist, Legs, Charm), tabbed right sidebar (Overall Stats / Overall Skills / Selected Equipment), hover-to-compare, info-rich center panel.
 - **Weapon selection via crafting tree** (smithy-style), not a flat list.
 - Armor selection (all ranks: Low, High, Master), always at max defense.
 - Charms (max level).
@@ -62,7 +62,7 @@ src/
     tree-layout.ts    weapon tree -> node grid positions + edges
     build-codec.ts    build <-> URL string
   stores/         Pinia stores
-  components/     slot list, stat sheet, item pickers, weapon tree, decoration screen
+  components/     slot list, right sidebar (tabs + compare window), center panel, item pickers, weapon tree, decoration screen
   input/          focus grid + keyboard/gamepad navigation
   icons.ts        icon registry: icon ID -> file path
 tests/
@@ -114,9 +114,37 @@ All constants below must be verified against a trusted reference and covered by 
 
 Goal: replicate the in-game Equipment change menu's **layout and behavior** as closely as possible.
 
-- Slot list on one side; selecting a slot opens the item picker.
-- Stat sheet always visible. Hovering or focusing a candidate item shows the diff against the equipped item (up/down indicators, colored values).
-- Skills summary with current level / max level pips.
+### Layout
+
+Three columns, like MH World:
+
+| Left | Center | Right sidebar |
+|------|--------|---------------|
+| Slot list (Weapon, Head, Chest, Arms, Waist, Legs, Charm). Selecting a slot opens the item picker. | No player model, so this space shows extra info (see below). | Main information panel, always visible, tabbed. |
+
+### Right sidebar (most important component)
+
+The sidebar holds about 90% of the information. It works like the in-game one: switch tabs with the mouse, keyboard or gamepad shoulder buttons. The tabs are part of the focus grid.
+
+Tabs:
+1. **Overall Stats**: totals for the whole build: attack, affinity, element/status, sharpness, elderseal, defense, elemental resistances, EFR/EFE.
+2. **Overall Skills**: every active skill with current level / max level pips, set bonuses (pieces equipped / required) and secret-skill cap raises.
+3. **Selected Equipment**: stats, slots, decorations and skills of the equipment in the currently selected slot.
+
+Hover / focus compare:
+- Hovering or focusing a candidate item (in a picker or the weapon tree) opens a **second window** in the **Selected Equipment** tab. It sits next to the first one: currently equipped item vs. hovered item. Values that differ are colored and get up/down indicators.
+- While the hover lasts, the **Overall Stats** and **Overall Skills** tabs show the build totals the change would produce as a diff (up/down, skills gained/lost).
+- When the hover ends, the second window closes and every tab goes back to the equipped values.
+
+### Center panel (improvement over the game)
+
+The game shows the hunter model here. We use the space for information the game hides or spreads across several menus:
+- The item picker, weapon tree and decoration screen open here when a slot is selected.
+- With no picker open, show a build overview: the full equipment list with slots and decorations, an EFR/EFE breakdown (true raw, sharpness multiplier, affinity, crit multiplier) and full descriptions of the active skills.
+- This content can grow over time, but it should not repeat what the sidebar already shows as its main content.
+
+### Other screens and behavior
+
 - Decoration screen: pick a slot, filter decorations by slot size.
 - Weapon tree screen:
   - Row of the 14 weapon type icons at the top.
@@ -164,7 +192,7 @@ ui/placeholder.webp           (fallback for any missing icon)
   - equip a weapon from the tree and see the stats update
   - equip armor and see skill totals update
   - slot a decoration (size rules enforced)
-  - hover diff preview shows correct up/down values
+  - hover diff preview opens the comparison window in the Selected Equipment tab with correct up/down values
   - save a build, reload, load it again
   - open a shared build URL and get the same build
   - complete a full build using keyboard only
