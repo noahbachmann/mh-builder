@@ -10,6 +10,7 @@ import WeaponTree from './components/center/WeaponTree.vue'
 import ArmorPicker from './components/center/ArmorPicker.vue'
 import CharmPicker from './components/center/CharmPicker.vue'
 import DecorationScreen from './components/center/DecorationScreen.vue'
+import CompareScreen from './components/center/CompareScreen.vue'
 import BuildOverview from './components/center/BuildOverview.vue'
 import HelpOverlay from './components/HelpOverlay.vue'
 
@@ -44,6 +45,7 @@ onBeforeUnmount(() => uninstall?.())
         <ArmorPicker v-else-if="ui.screen === 'armor'" />
         <CharmPicker v-else-if="ui.screen === 'charm'" />
         <DecorationScreen v-else-if="ui.screen === 'decorations'" />
+        <CompareScreen v-else-if="ui.screen === 'compare'" />
         <BuildOverview v-else />
       </div>
       <Sidebar class="right" />
@@ -92,6 +94,8 @@ h1 {
 .left {
   display: grid;
   grid-template-rows: auto minmax(120px, 1fr);
+  /* long saved-build names must not widen the column */
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   min-height: 0;
 }

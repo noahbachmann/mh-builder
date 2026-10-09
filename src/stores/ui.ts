@@ -6,7 +6,7 @@ import type { DecoSlot, EquipSlot } from '../engine'
 export const SIDEBAR_TABS = ['stats', 'skills', 'equipment'] as const
 export type SidebarTab = (typeof SIDEBAR_TABS)[number]
 
-export type Screen = 'overview' | 'weapon' | 'armor' | 'charm' | 'decorations'
+export type Screen = 'overview' | 'weapon' | 'armor' | 'charm' | 'decorations' | 'compare'
 
 /** Which screen/tab is open; selection state that is UI-only. */
 export const useUiStore = defineStore('ui', () => {
