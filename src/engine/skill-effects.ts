@@ -5,8 +5,7 @@
  * unless noted. Raw values are TRUE raw (MHW skill text lists true raw), element and status
  * values are DISPLAYED (x10) like the weapon stat.
  *
- * `conditional` effects only apply once situational toggles exist (later milestone); the
- * engine ignores them unless asked to include them.
+ * `conditional` effects only apply when their condition is switched on (`EffectOptions`).
  */
 import type { Element, ElementalResistances, Status } from '../data/types'
 import { CRIT_BOOST_MULTIPLIER } from './constants'
@@ -17,6 +16,8 @@ export interface SkillEffect {
   /** multiplier on base true raw */
   rawMul?: number
   affinity?: number
+  /** extra affinity on wounded (tenderized) parts, on top of `affinity` (Weakness Exploit) */
+  woundAffinity?: number
   /** absolute raw crit multiplier (replaces the 1.25 base) */
   critMultiplier?: number
   /** flat displayed element, per element ('all' = every element) */
@@ -39,6 +40,9 @@ export interface SkillEffect {
 }
 
 type Table = Record<string, SkillEffect[]>
+
+/** Weakness Exploit's condition; the monster damage table applies it per hitzone instead of as a toggle. */
+export const WEAK_SPOT_CONDITION = 'Weak spot hit'
 
 const perLevel = <T>(values: T[], build: (v: T, i: number) => SkillEffect): SkillEffect[] => values.map(build)
 
@@ -71,7 +75,14 @@ export const SKILL_EFFECTS: Table = {
   })),
   'critical-eye': perLevel([5, 10, 15, 20, 25, 30, 40], (affinity) => ({ affinity })),
   'critical-boost': CRIT_BOOST_MULTIPLIER.map((critMultiplier) => ({ critMultiplier })),
-  'weakness-exploit': perLevel([10, 15, 30], (affinity) => ({ affinity, conditional: 'Weak spot hit' })),
+  'weakness-exploit': perLevel(
+    [
+      [10, 5],
+      [15, 15],
+      [30, 20],
+    ],
+    ([affinity, woundAffinity]) => ({ affinity, woundAffinity, conditional: WEAK_SPOT_CONDITION }),
+  ),
   agitator: perLevel(
     [
       [4, 5],
@@ -154,16 +165,28 @@ export function skillEffect(skillId: string, level: number): SkillEffect | null 
 }
 
 export interface EffectOptions {
-  /** apply conditional effects too (situational toggles, later milestone) */
+  /** apply every conditional effect ("all conditions met") */
   includeConditional?: boolean
+  /** apply only the conditional effects with these `conditional` labels */
+  conditions?: ReadonlySet<string>
 }
+
+/** Every condition label with the skills that use it, in table order. */
+export const CONDITIONS: { label: string; skillIds: string[] }[] = (() => {
+  const out = new Map<string, string[]>()
+  for (const [id, levels] of Object.entries(SKILL_EFFECTS)) {
+    const label = levels.find((e) => e.conditional)?.conditional
+    if (label) out.set(label, [...(out.get(label) ?? []), id])
+  }
+  return [...out].map(([label, skillIds]) => ({ label, skillIds }))
+})()
 
 /** All active effects for a set of skill levels. */
 export function activeEffects(levels: Map<string, number>, opts: EffectOptions = {}): SkillEffect[] {
   const out: SkillEffect[] = []
   for (const [id, level] of levels) {
     const e = skillEffect(id, level)
-    if (e && (!e.conditional || opts.includeConditional)) out.push(e)
+    if (e && (!e.conditional || opts.includeConditional || opts.conditions?.has(e.conditional))) out.push(e)
   }
   return out
 }
