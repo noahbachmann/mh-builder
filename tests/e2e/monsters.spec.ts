@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { DEFENDER_GS_1, DEFENDER_GS_2, id36 } from './helpers'
+import { CHALLENGER_JEWEL, DEFENDER_GS_1, DEFENDER_GS_2, RIMEGUARD_HELM_A, id36 } from './helpers'
 
 const GS2 = `1.${id36(DEFENDER_GS_2)}`
 const cells = (page: Page, part: string) => page.getByTestId('damage-row').filter({ hasText: part }).getByTestId('damage-cell')
@@ -88,6 +88,28 @@ test('damage output: builds, wounded, state, motion value, weights', async ({ pa
     await row.getByTestId('weight-down').click()
   }
   await expect(avg).toHaveText((await forearms.nth(0).textContent())!)
+})
+
+test('damage output: conditional skills of the builds can be switched on and off', async ({ page }) => {
+  // helm with Challenger Jewel 2 (Agitator 1) + Tenderizer Jewel 2 (Weakness Exploit 1)
+  const code = `${GS2}_${id36(RIMEGUARD_HELM_A)}-${id36(CHALLENGER_JEWEL)}-${id36(61)}`
+  await page.goto(`/?view=monsters&m=rathalos&b=${code}`)
+  await page.getByTestId('mtab-damage').click()
+
+  const skills = page.getByTestId('damage-skill')
+  await expect(skills.locator('th')).toHaveText(['Weakness Exploit', 'Agitator', 'Coalescence'])
+  const toggle = (name: string) => skills.filter({ hasText: name }).getByTestId('toggle-skill')
+  // Weakness Exploit on by default (per part), situational skills off
+  await expect(toggle('Weakness Exploit')).toHaveAttribute('aria-pressed', 'true')
+  await expect(toggle('Agitator')).toHaveAttribute('aria-pressed', 'false')
+
+  const head = cells(page, 'Head').nth(0)
+  const base = Number(await head.textContent())
+  await toggle('Agitator').click()
+  await expect.poll(async () => Number(await head.textContent())).toBeGreaterThan(base)
+  await toggle('Agitator').click()
+  await toggle('Weakness Exploit').click()
+  await expect.poll(async () => Number(await head.textContent())).toBeLessThan(base)
 })
 
 test('deep link restores monster, page and build', async ({ page }) => {

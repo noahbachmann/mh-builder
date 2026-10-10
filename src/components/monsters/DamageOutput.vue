@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CONDITIONS, SHARPNESS_COLORS, WEAK_SPOT_CONDITION, skillLevels, type DamageRow, type HitDamage } from '../../engine'
+import { db } from '../../data'
+import { CONDITIONAL_SKILLS, SHARPNESS_COLORS, skillLevels, type DamageRow, type HitDamage } from '../../engine'
 import { capitalize, fmt } from '../../format'
 import { vFocusCell } from '../../input/focus-grid'
 import { useCompareStore } from '../../stores/compare'
@@ -13,13 +14,18 @@ const store = useMonsterStore()
 const compare = useCompareStore()
 const saved = useSavedStore()
 
-// focus grid rows: settings first, table rows after
-const ROW = { mode: 0, builds: 1, conditions: 2, sharpness: 3, mv: 4, table: 10 } as const
+// focus grid rows: settings first, part rows, then skill condition rows
+const ROW = { mode: 0, builds: 1, sharpness: 3, mv: 4, table: 10, skills: 200 } as const
 
-/** conditions some build has a skill for; Weakness Exploit is applied per hitzone instead */
-const conditions = computed(() => {
-  const skills = new Set(store.builds.flatMap((b) => [...skillLevels(b.stats.skills).keys()]))
-  return CONDITIONS.filter((c) => c.label !== WEAK_SPOT_CONDITION && c.skillIds.some((id) => skills.has(id)))
+/** every conditional skill in the shown builds, with its level per build (0 = build lacks it) */
+const skills = computed(() => {
+  const levels = store.builds.map((b) => skillLevels(b.stats.skills))
+  return CONDITIONAL_SKILLS.filter((c) => levels.some((l) => l.has(c.skillId))).map((c) => ({
+    ...c,
+    name: db.skill.get(c.skillId)?.name ?? c.skillId,
+    levels: levels.map((l) => l.get(c.skillId) ?? 0),
+    note: c.skillId === 'weakness-exploit' ? 'per part: hitzone ≥ 45, + wound bonus' : c.label,
+  }))
 })
 
 const rows = computed(() => store.rows)
@@ -75,22 +81,6 @@ function onMv(e: Event) {
         <span v-if="!saved.builds.length" class="faint hint">Save builds on the Equipment page to compare them here.</span>
       </div>
 
-      <div v-if="conditions.length" class="line" role="group" aria-label="Conditions">
-        <span class="label dim">Conditions</span>
-        <button
-          v-for="(c, i) in conditions"
-          :key="c.label"
-          v-focus-cell="{ region: 'damage', row: ROW.conditions, col: i }"
-          v-skill-info="{ skillId: c.skillIds[0]!, level: 0 }"
-          class="chip"
-          :class="{ 'is-active': store.conditions.has(c.label) }"
-          :aria-pressed="store.conditions.has(c.label)"
-          data-testid="damage-condition"
-          @click="store.toggleCondition(c.label)"
-        >
-          {{ c.label }}
-        </button>
-      </div>
 
       <div class="line" role="group" aria-label="Sharpness">
         <span class="label dim">Sharpness</span>
@@ -219,6 +209,34 @@ function onMv(e: Event) {
           >
             {{ h ? fmt(h.total, 1) : '—' }}
           </td>
+        </tr>
+      </tbody>
+      <tbody data-testid="damage-skills">
+        <tr class="section">
+          <th :colspan="4 + store.builds.length">Skill conditions</th>
+        </tr>
+        <tr v-if="!skills.length">
+          <td :colspan="4 + store.builds.length" class="faint">No conditional skills in these builds.</td>
+        </tr>
+        <tr v-for="(c, i) in skills" :key="c.skillId" data-testid="damage-skill">
+          <th>
+            <span v-skill-info="{ skillId: c.skillId, level: c.levels.find((l) => l > 0) ?? 0 }">{{ c.name }}</span>
+          </th>
+          <td class="c">
+            <button
+              v-focus-cell="{ region: 'damage', row: ROW.skills + i, col: 0 }"
+              class="tick"
+              :class="{ on: store.conditions.has(c.skillId) }"
+              :aria-pressed="store.conditions.has(c.skillId)"
+              :aria-label="`${c.name} active`"
+              data-testid="toggle-skill"
+              @click="store.toggleCondition(c.skillId)"
+            >
+              {{ store.conditions.has(c.skillId) ? '✓' : '' }}
+            </button>
+          </td>
+          <td colspan="2" class="cond dim">{{ c.note }}</td>
+          <td v-for="(lv, j) in c.levels" :key="j" class="num" :class="{ faint: !lv }">{{ lv ? `Lv ${lv}` : '—' }}</td>
         </tr>
       </tbody>
     </table>
@@ -364,6 +382,18 @@ function onMv(e: Event) {
 tr.gone th,
 tr.gone td {
   color: var(--text-faint);
+}
+.section th {
+  padding-top: 12px;
+  color: var(--gold-dim) !important;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.cond {
+  font-size: 11px;
+  white-space: nowrap;
 }
 .note {
   font-size: 11px;

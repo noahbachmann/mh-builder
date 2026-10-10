@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '../data'
 import type { Hitzone, Monster } from '../data/types'
-import { emptyBuild, equip } from './build'
+import { emptyBuild, equip, setDecoration } from './build'
 import { tenderize } from './constants'
 import {
   damageTable,
@@ -201,6 +201,21 @@ describe('damageTable', () => {
     expect(rows[0]!.hits[1]!.total).toBeGreaterThan(rows[0]!.hits[0]!.total)
     expect(rows[0]!.best).toEqual([1])
     expect(rows[0]!.hits[2]).toBeNull()
+  })
+
+  it('conditional skills only count when switched on; Weakness Exploit can be switched off', () => {
+    // Rimeguard Helm α+ [3, 2]: Challenger Jewel 2 (Agitator 1) + Tenderizer Jewel 2 (Weakness Exploit 1)
+    const helm = equip(equip(emptyBuild(), 'weapon', id('Defender Great Sword II'), db), 'head', 1297, db)
+    const build = setDecoration(setDecoration(helm, 'head', 0, 82, db), 'head', 1, 61, db)
+    const off = evaluateForMonster(build, db, new Set())
+    const agitator = evaluateForMonster(build, db, new Set(['agitator']))
+    expect(agitator.weapon!.trueRaw).toBeCloseTo(off.weapon!.trueRaw + 4)
+    // WEX in the set is ignored by the evaluation (applied per hitzone instead)
+    expect(evaluateForMonster(build, db, new Set(['weakness-exploit'])).weapon!.affinity).toBe(off.weapon!.affinity)
+
+    const head = (on: boolean) => damageTable(rath, [off], { ...settings, weaknessExploit: on })[0]!.hits[0]!
+    expect(head(true).affinity).toBe(off.weapon!.affinity + 10)
+    expect(head(false).affinity).toBe(off.weapon!.affinity)
   })
 
   it('wounded parts are marked and tenderized', () => {
