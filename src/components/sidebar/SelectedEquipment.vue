@@ -53,7 +53,7 @@ const decos = computed(() => (slot.value === 'charm' || preview.candidate?.kind 
 const renderOf = (c: CardItem | null | undefined) => {
   if (!c || (c.kind !== 'weapon' && c.kind !== 'armor')) return null
   const url = renderUrl(c.kind, c.item.id)
-  return url ? { url, name: c.item.name, rarity: c.item.rarity } : null
+  return url ? { url, name: c.item.name } : null
 }
 const equippedRender = computed(() => renderOf(equipped.value))
 const candidateRender = computed(() => renderOf(candidate.value))
@@ -63,14 +63,12 @@ const heading = computed(() => (preview.candidate?.kind === 'deco' ? `${SLOT_LAB
 <template>
   <div class="selected" data-testid="selected-equipment">
     <div class="section-title">{{ heading }}</div>
+    <!-- grid: cards in row 1, each render below its own card in row 2 -->
     <div class="cards" :class="{ two: candidate !== undefined }">
       <EquipmentCard title="Equipped" :card="equipped" :decorations="decos" />
       <EquipmentCard v-if="candidate !== undefined" title="Selected" :card="candidate" :compare="equipped" candidate />
-    </div>
-    <!-- renders below the stats; the hovered item's render goes under the equipped one -->
-    <div v-if="equippedRender || candidateRender" class="renders">
-      <ItemRender v-if="equippedRender" v-bind="equippedRender" title="Equipped" />
-      <ItemRender v-if="candidateRender" v-bind="candidateRender" title="Selected" candidate />
+      <ItemRender v-if="equippedRender" v-bind="equippedRender" class="render-1" />
+      <ItemRender v-if="candidateRender" v-bind="candidateRender" class="render-2" candidate />
     </div>
   </div>
 </template>
@@ -82,11 +80,13 @@ const heading = computed(() => (preview.candidate?.kind === 'deco' ? `${SLOT_LAB
   gap: 6px;
   padding: 8px;
 }
-.renders {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 0 8px 8px;
+.render-1 {
+  grid-row: 2;
+  grid-column: 1;
+}
+.render-2 {
+  grid-row: 2;
+  grid-column: 2;
 }
 .cards.two {
   grid-template-columns: 1fr 1fr;

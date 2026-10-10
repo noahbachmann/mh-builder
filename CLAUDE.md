@@ -196,7 +196,7 @@ stat/<attack|affinity|defense|elderseal>  slot/size-1..4
 
 ## Item renders
 
-`pnpm renders:import` (`scripts/renders/`) pulls the infobox picture of every weapon and armor piece from the Fextralife MHW wiki (MediaWiki API, cached in `.cache/fextralife/`, rate-limited: the wiki resets connections on bursts) and writes 160px webp files to `public/renders/` plus the id -> file map `src/data/renders.json`. Names that don't match a wiki title get spelling variants (α -> Alpha, `(MR)`, `+`), then the base item's render (same in-game model; `pnpm renders:import --offline` re-applies only this fallback to `renders.json`, no network). Armor uses the male render. Renders show in the Selected Equipment tab under the cards (hovered item's render below the equipped one); items without one show none. Unmatched names: `.cache/fextralife/missing.txt`. Images are Capcom's, via the wiki (fan-made, non-commercial).
+`pnpm renders:import` (`scripts/renders/`) pulls the infobox picture of every weapon and armor piece from the Fextralife MHW wiki (MediaWiki API, cached in `.cache/fextralife/`, rate-limited: the wiki resets connections on bursts) and writes 160px webp files to `public/renders/` plus the id -> file map `src/data/renders.json`. Names that don't match a wiki title get spelling variants (α -> Alpha, `(MR)`, `+`), then the base item's render (same in-game model; `pnpm renders:import --offline` re-applies only this fallback to `renders.json`, no network). Armor uses the male render. Renders show in the Selected Equipment tab, each below its own card (side by side while hovering); items without one show none. Unmatched names: `.cache/fextralife/missing.txt`. Images are Capcom's, via the wiki (fan-made, non-commercial).
 
 ## Testing
 

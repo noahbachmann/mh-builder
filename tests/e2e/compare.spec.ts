@@ -43,10 +43,14 @@ test('passing over other slots on the way to a candidate keeps the selected slot
   await expect(page.getByTestId('slot-weapon')).toHaveClass(/is-selected/)
   await page.getByRole('button', { name: 'Defender Great Sword II', exact: true }).hover()
   await expect(page.getByTestId('compare-card')).toBeVisible()
-  // render of the hovered item sits below the equipped one
+  // renders sit side by side, each below its own card
   await expect(page.getByTestId('candidate-render')).toBeVisible()
-  const [eq, cand] = await Promise.all([page.getByTestId('equipped-render').boundingBox(), page.getByTestId('candidate-render').boundingBox()])
-  expect(cand!.y).toBeGreaterThan(eq!.y)
+  const box = (id: string) => page.getByTestId(id).boundingBox().then((b) => b!)
+  const [eq, cand, eqCard, candCard] = await Promise.all(['equipped-render', 'candidate-render', 'equipped-card', 'compare-card'].map(box))
+  expect(cand.y).toBe(eq.y)
+  expect(cand.x).toBeGreaterThan(eq.x)
+  expect(eq.y).toBeGreaterThanOrEqual(eqCard.y + eqCard.height)
+  expect(cand.x).toBeCloseTo(candCard.x, 0)
 
   await page.mouse.move(0, 0)
   await page.keyboard.press('Escape')

@@ -90,7 +90,7 @@ h1 {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 290px minmax(0, 1fr) 480px;
+  grid-template-columns: 260px minmax(0, 1fr) 400px;
   gap: 8px;
 }
 .left {
