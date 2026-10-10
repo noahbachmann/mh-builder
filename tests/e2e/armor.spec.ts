@@ -32,3 +32,13 @@ test('rank tabs filter the list', async ({ page }) => {
   await page.getByTestId('rank-MR').click()
   await expect(page.getByRole('button', { name: 'Leather Headgear', exact: true })).toHaveCount(0)
 })
+
+test('slot list rows keep their height with or without decoration slots', async ({ page }) => {
+  await page.goto('/')
+  const h = async () => (await page.getByTestId('slot-head').boundingBox())!.height
+  const empty = await h()
+  await page.getByTestId('slot-head').click()
+  await page.getByTestId('armor-search').fill('Rimeguard Helm')
+  await page.getByRole('button', { name: 'Rimeguard Helm α+', exact: true }).click()
+  expect(await h()).toBe(empty)
+})

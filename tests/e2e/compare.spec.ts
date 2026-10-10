@@ -32,3 +32,25 @@ test('hover opens the compare window with up/down values; leaving closes it', as
   await expect(page.getByTestId('preview-banner')).toHaveCount(0)
   await expect(page.getByTestId('stat-attack')).toHaveText('624')
 })
+
+test('passing over other slots on the way to a candidate keeps the selected slot and its card', async ({ page }) => {
+  await page.goto(`/?b=1.${id36(DEFENDER_GS_1)}`)
+  await page.getByTestId('slot-weapon').click()
+  await page.getByTestId('tab-equipment').click()
+  // mouse path crosses the empty chest slot before reaching the tree
+  await page.getByTestId('slot-chest').hover()
+  await expect(page.getByTestId('slot-chest')).not.toHaveClass(/is-selected/)
+  await expect(page.getByTestId('slot-weapon')).toHaveClass(/is-selected/)
+  await page.getByRole('button', { name: 'Defender Great Sword II', exact: true }).hover()
+  await expect(page.getByTestId('compare-card')).toBeVisible()
+  // render of the hovered item sits below the equipped one
+  await expect(page.getByTestId('candidate-render')).toBeVisible()
+  const [eq, cand] = await Promise.all([page.getByTestId('equipped-render').boundingBox(), page.getByTestId('candidate-render').boundingBox()])
+  expect(cand!.y).toBeGreaterThan(eq!.y)
+
+  await page.mouse.move(0, 0)
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('compare-card')).toHaveCount(0)
+  await expect(page.getByTestId('candidate-render')).toHaveCount(0)
+  await expect(page.getByTestId('equipped-card').getByTestId('card-name')).toHaveText('Defender Great Sword I')
+})
