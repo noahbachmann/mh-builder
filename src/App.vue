@@ -53,7 +53,8 @@ onBeforeUnmount(() => uninstall?.())
     <footer class="foot faint">
       Fan-made, non-commercial, not affiliated with Capcom. Data:
       <a href="https://github.com/gatheringhallstudios/MHWorldData" target="_blank" rel="noopener">MHWorldData</a> (MIT). Icons:
-      <a href="https://github.com/OthelloRhin/MHW_Icons_SVG" target="_blank" rel="noopener">MHW_Icons_SVG</a> (MIT).
+      <a href="https://github.com/OthelloRhin/MHW_Icons_SVG" target="_blank" rel="noopener">MHW_Icons_SVG</a> (MIT). Renders:
+      <a href="https://monsterhunterworld.wiki.fextralife.com/" target="_blank" rel="noopener">MHW Wiki (Fextralife)</a>. Game images © Capcom.
     </footer>
     <HelpOverlay />
   </div>
