@@ -9,7 +9,14 @@ import type {
   Elderseal,
   ElementOrStatus,
   GameData,
+  Hitzone,
+  Item,
+  Monster,
+  MonsterData,
+  MonsterPart,
+  MonsterReward,
   Rank,
+  Stars,
   SetBonus,
   SharpnessBar,
   Skill,
@@ -18,6 +25,7 @@ import type {
   WeaponElement,
   WeaponType,
 } from '../../src/data/types.ts'
+import { MONSTER_STAR_KEYS } from '../../src/data/types.ts'
 
 export function slug(name: string): string {
   return name
@@ -41,6 +49,26 @@ const GUNNERS = new Set<WeaponType>(['light-bowgun', 'heavy-bowgun', 'bow'])
 const ELEMENTAL_AMMO = ['flaming', 'water', 'freeze', 'thunder', 'dragon']
 const COATINGS = ['close', 'power', 'paralysis', 'poison', 'sleep', 'blast']
 
+/** hitzone suffixes that name a sub-part, not a state (Zorah exhaust organs, Shara head casing) */
+const PART_SUFFIXES = new Set(['Top', 'Bottom', 'Crater', 'Head', 'Central', 'Rear'])
+/** base-game "wounded" rows are the part's broken state (Vaal chest, Nergigante horn, ...) */
+const TAG_ALIAS: Record<string, string | null> = { Wounded: 'Broken', 'After Wounded': 'Broken', 'Before Wounded': null }
+const AILMENT_KEYS = [
+  'roar', 'wind', 'tremor', 'defense_down', 'fireblight', 'waterblight', 'thunderblight', 'iceblight',
+  'dragonblight', 'blastblight', 'regional', 'poison', 'sleep', 'paralysis', 'bleed', 'stun', 'mud', 'effluvia',
+]
+
+/** `Head (Broken+SCritical)` -> part Head, tags [Broken, SCritical] */
+export function parseHitzoneName(name: string): { part: string; tags: string[] } {
+  const m = /^(.*) \(([^)]*)\)$/.exec(name)
+  if (!m || PART_SUFFIXES.has(m[2]!)) return { part: name, tags: [] }
+  const tags = m[2]!
+    .split('+')
+    .map((t) => (t in TAG_ALIAS ? TAG_ALIAS[t]! : t))
+    .filter((t): t is string => t !== null)
+  return { part: m[1]!, tags }
+}
+
 function rankFromRarity(rarity: number): Rank {
   if (rarity <= 4) return 'LR'
   if (rarity <= 8) return 'HR'
@@ -48,7 +76,7 @@ function rankFromRarity(rarity: number): Rank {
 }
 
 export interface NormalizeResult {
-  data: GameData
+  data: GameData & MonsterData
   warnings: string[]
 }
 
@@ -244,5 +272,114 @@ export function normalize(src: string): NormalizeResult {
     return w
   })
 
-  return { data: { weapons, armor, armorSets, setBonuses, charms, decorations, skills }, warnings }
+  // --- items (only those monster rewards use)
+  const itemRows = new Map(csv('items/item_base.csv').map((r) => [r.name_en!, r]))
+  const items = new Map<number, Item>()
+  const itemId = (name: string, context: string): number | null => {
+    const r = itemRows.get(name)
+    if (!r) {
+      warnings.push(`${context}: unknown item "${name}" dropped`)
+      return null
+    }
+    const id = int(r.id)
+    if (!items.has(id))
+      items.set(id, {
+        id,
+        name,
+        category: r.category!,
+        rarity: int(r.rarity),
+        iconName: r.icon_name || null,
+        iconColor: r.icon_color || null,
+      })
+    return id
+  }
+
+  // --- monsters (large only); every file but monster_base joins on the English name
+  const byMonster = <T>(rows: Row[], key: string, map: (r: Row) => T | null) => {
+    const out = new Map<string, T[]>()
+    for (const r of rows) {
+      const v = map(r)
+      if (v === null) continue
+      const list = out.get(r[key]!) ?? []
+      list.push(v)
+      out.set(r[key]!, list)
+    }
+    return out
+  }
+  const monsterDesc = new Map(csv('monsters/monster_base_translations.csv').map((r) => [r.name_en!, r.description_en ?? '']))
+  const hitzones = byMonster(csv('monsters/monster_hitzones.csv'), 'base_name_en', (r): Hitzone => ({
+    ...parseHitzoneName(r.hitzone_en!),
+    cut: int(r.cut),
+    impact: int(r.impact),
+    shot: int(r.shot),
+    fire: int(r.fire),
+    water: int(r.water),
+    thunder: int(r.thunder),
+    ice: int(r.ice),
+    dragon: int(r.dragon),
+    ko: int(r.ko),
+  }))
+  const parts = byMonster(csv('monsters/monster_breaks.csv'), 'base_name_en', (r): MonsterPart => ({
+    name: r.part_en!,
+    flinch: int(r.flinch),
+    break: int(r.wound),
+    sever: int(r.sever),
+    extract: r.extract || null,
+  }))
+  const weaknessRows = byMonster(csv('monsters/monster_weaknesses.csv'), 'name_en', (r) => r)
+  const ailments = new Map(csv('monsters/monster_ailments.csv').map((r) => [r.base_name_en!, r]))
+  const rewardRows = byMonster(csv('monsters/monster_rewards.csv'), 'base_name_en', (r) => r)
+  const stars = (r: Row) =>
+    Object.fromEntries(MONSTER_STAR_KEYS.filter((k) => r[k] !== '').map((k) => [k, int(r[k])])) as Partial<Stars>
+
+  const monsters: Monster[] = csv('monsters/monster_base.csv')
+    .filter((r) => r.size === 'large')
+    .map((r) => {
+      const name = r.name_en!
+      const ctx = `monster ${name}`
+      const weak = weaknessRows.get(name) ?? []
+      const normal = weak.find((w) => w.form === 'normal')
+      if (!normal) warnings.push(`${ctx}: no weaknesses`)
+      const ail = ailments.get(name)
+      const rewards = (rewardRows.get(name) ?? []).flatMap((w): MonsterReward[] => {
+        const id = itemId(w.item_en!, ctx)
+        if (id === null) return []
+        const rank = w.rank as Rank
+        return [{ rank, condition: w.condition_en!, itemId: id, stack: int(w.stack), percentage: w.percentage ? int(w.percentage) : null }]
+      })
+      if (!hitzones.has(name)) warnings.push(`${ctx}: no hitzones`)
+      return {
+        id: int(r.id),
+        slug: slug(name),
+        name,
+        ecology: r.ecology_en ?? '',
+        description: monsterDesc.get(name) ?? '',
+        traps: { pitfall: bool(r.pitfall_trap), shock: bool(r.shock_trap), vine: bool(r.vine_trap) },
+        weaknesses: { ...Object.fromEntries(MONSTER_STAR_KEYS.map((k) => [k, 0])), ...(normal ? stars(normal) : {}) } as Stars,
+        altWeaknesses: weak
+          .filter((w) => w.form === 'alt')
+          .map((w) => ({ description: w.alt_description ?? '', stars: stars(w) })),
+        ailments: ail
+          ? AILMENT_KEYS.filter((k) => ail[k]).map((k) => ({ id: k, strength: ail[k] === 'TRUE' ? null : ail[k]! }))
+          : [],
+        hitzones: hitzones.get(name) ?? [],
+        parts: parts.get(name) ?? [],
+        rewards,
+      }
+    })
+
+  return {
+    data: {
+      weapons,
+      armor,
+      armorSets,
+      setBonuses,
+      charms,
+      decorations,
+      skills,
+      monsters,
+      items: [...items.values()].sort((a, b) => a.id - b.id),
+    },
+    warnings,
+  }
 }

@@ -166,3 +166,87 @@ export interface GameData {
   decorations: Decoration[]
   skills: Skill[]
 }
+
+export const MONSTER_STAR_KEYS = [...ELEMENTS, ...STATUSES, 'stun'] as const
+export type MonsterStarKey = (typeof MONSTER_STAR_KEYS)[number]
+/** field guide weakness stars, 0-3 */
+export type Stars = Record<MonsterStarKey, number>
+
+export interface Hitzone {
+  part: string
+  /**
+   * Variant tags parsed from the source suffix, e.g. `Head (Mud)` -> ['Mud'], `(Broken+SCritical)` ->
+   * ['Broken', 'SCritical']. 'Broken' is per part; any other tag is a monster-wide mode.
+   */
+  tags: string[]
+  cut: number
+  impact: number
+  shot: number
+  fire: number
+  water: number
+  thunder: number
+  ice: number
+  dragon: number
+  ko: number
+}
+
+export interface MonsterPart {
+  name: string
+  flinch: number
+  /** break threshold (source column `wound`), 0 = not breakable */
+  break: number
+  /** sever threshold, 0 = not severable */
+  sever: number
+  /** kinsect extract color */
+  extract: string | null
+}
+
+export interface MonsterAilment {
+  /** source column, e.g. 'roar', 'fireblight' */
+  id: string
+  /** 'small' | 'large' | 'extreme' for roar / wind / tremor */
+  strength: string | null
+}
+
+export interface MonsterReward {
+  rank: Rank
+  condition: string
+  itemId: number
+  stack: number
+  /** null where the source has none (Kulve Taroth gold plating) */
+  percentage: number | null
+}
+
+export interface Monster {
+  id: number
+  /** URL id */
+  slug: string
+  name: string
+  ecology: string
+  description: string
+  traps: { pitfall: boolean; shock: boolean; vine: boolean }
+  weaknesses: Stars
+  /** alternate forms (mud, charged, ...); statuses missing = same as normal */
+  altWeaknesses: { description: string; stars: Partial<Stars> }[]
+  ailments: MonsterAilment[]
+  hitzones: Hitzone[]
+  /** from break data; empty when the source has none (most Iceborne monsters) */
+  parts: MonsterPart[]
+  rewards: MonsterReward[]
+}
+
+export interface Item {
+  id: number
+  name: string
+  category: string
+  rarity: number
+  iconName: string | null
+  iconColor: string | null
+}
+
+/** Monster page data: lazy-loaded (see `src/data/monsters.ts`), not part of `GameData`. */
+export interface MonsterData {
+  monsters: Monster[]
+  /** only items referenced by monster rewards */
+  items: Item[]
+}
