@@ -154,7 +154,7 @@ The game shows the hunter model here. We use the space for information the game 
 
 ### Monsters page
 
-Header tabs "Equipment" / "Monsters" (`M` toggles; URL `?view=monsters&m=<slug>`, `?b=` kept). Same 3 columns, wider sidebar:
+Header tabs "Equipment" / "Monsters" (`S` toggles; URL `?view=monsters&m=<slug>`, `?b=` kept). Same 3 columns, wider sidebar:
 - Left: large monsters (icon + name, search).
 - Center: field guide: render, ecology, description, traps, physiology (hitzones of the chosen state; broken variants as extra rows; weak spots >= 45 gold), ailments it inflicts.
 - Right tabs (`Q` / `E`): **Monster Info** (weakness stars incl. alternate forms; break/sever/flinch thresholds and extract colour, or parts from break/carve rewards where the source has no break data), **Damage Output**, **Loot** (LR / HR / MR sub-tabs via `A` / `D`, grouped by reward condition).
@@ -175,7 +175,7 @@ Header tabs "Equipment" / "Monsters" (`M` toggles; URL `?view=monsters&m=<slug>`
   - "Special" tab for Kulve Taroth and Safi'jiiva weapons (later milestone).
 - Controls (mouse or keyboard, defined in `src/input/keyboard.ts`, shown with `?` in the app):
   - Arrows move the cursor, Enter selects or equips, Esc goes back.
-  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `8` opens decorations; `C` opens the build comparison; `M` switches Equipment / Monsters (equipment keys switch back).
+  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `8` opens decorations; `C` opens the build comparison; `S` switches Equipment / Monsters (equipment keys switch back).
   - `Q` / `E` switch the previous / next sidebar tab.
   - `A` / `D` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen).
   - Tab moves between panels; each panel keeps its own cursor (roving tabindex). `F` focuses search.

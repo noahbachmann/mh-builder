@@ -4,10 +4,10 @@ import { CHALLENGER_JEWEL, DEFENDER_GS_1, DEFENDER_GS_2, RIMEGUARD_HELM_A, id36 
 const GS2 = `1.${id36(DEFENDER_GS_2)}`
 const cells = (page: Page, part: string) => page.getByTestId('damage-row').filter({ hasText: part }).getByTestId('damage-cell')
 
-test('M opens the Monsters page; field guide, info and loot', async ({ page }) => {
+test('S opens the Monsters page; field guide, info and loot', async ({ page }) => {
   await page.goto('/')
   await page.locator('body').click({ position: { x: 5, y: 5 } })
-  await page.keyboard.press('m')
+  await page.keyboard.press('s')
   await expect(page.getByTestId('view-monsters')).toHaveAttribute('aria-current', 'page')
   await expect(page.getByTestId('monster-item').first()).toBeFocused()
 

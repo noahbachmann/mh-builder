@@ -5,7 +5,7 @@
  *   1-7       open Weapon / Head / Chest / Arms / Waist / Legs / Charm
  *   8         open Decorations
  *   C         compare saved builds
- *   M         switch Equipment / Monsters page
+ *   S         switch Equipment / Monsters page
  *   Q / E     previous / next sidebar tab (monster tab on the Monsters page)
  *   A / D     previous / next sub-tab of the open screen (weapon type, rank, equipment piece; loot rank)
  *   F         focus search
@@ -27,7 +27,7 @@ export const SHORTCUTS: [string, string][] = [
   ['1 – 7', 'Weapon, Head, Chest, Arms, Waist, Legs, Charm'],
   ['8', 'Decorations'],
   ['C', 'Compare saved builds'],
-  ['M', 'Equipment / Monsters page'],
+  ['S', 'Equipment / Monsters page'],
   ['Q / E', 'Previous / next sidebar tab'],
   ['A / D', 'Previous / next weapon type, rank, equipment piece or loot rank'],
   ['Tab', 'Next panel'],
@@ -113,7 +113,7 @@ export function installKeyboard(): () => void {
     }
 
     const key = e.key.toLowerCase()
-    if (key === 'm') {
+    if (key === 's') {
       toggleView()
       e.preventDefault()
       return
