@@ -65,11 +65,14 @@ test('damage output: builds, wounded, state, motion value, weights', async ({ pa
   await expect(forearms.nth(0)).toHaveClass(/best/)
   const base = Number(await forearms.nth(0).textContent())
 
-  // wounding a part raises its hitzone
+  // wounding a part raises its hitzone; the row keeps its height (no layout shift)
   const tail = cells(page, 'Tail').nth(0)
+  const tailRow = page.getByTestId('damage-row').filter({ hasText: 'Tail' })
   const tailBase = Number(await tail.textContent())
-  await page.getByTestId('damage-row').filter({ hasText: 'Tail' }).getByTestId('toggle-wounded').click()
+  const height = (await tailRow.boundingBox())!.height
+  await tailRow.getByTestId('toggle-wounded').click()
   await expect.poll(async () => Number(await tail.textContent())).toBeGreaterThan(tailBase)
+  expect((await tailRow.boundingBox())!.height).toBe(height)
 
   // mud state: forearms 80 -> 35 cut
   await page.getByTestId('damage-output').getByTestId('mode-chip').filter({ hasText: 'Mud' }).click()

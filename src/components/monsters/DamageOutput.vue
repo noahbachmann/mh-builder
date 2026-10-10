@@ -159,7 +159,7 @@ function onMv(e: Event) {
               data-testid="toggle-wounded"
               @click="store.toggleWounded(r.part)"
             >
-              {{ r.wounded ? '✓' : '' }}
+              ✓
             </button>
           </td>
           <td class="c">
@@ -173,7 +173,7 @@ function onMv(e: Event) {
               data-testid="toggle-broken"
               @click="store.toggleBroken(r.part)"
             >
-              {{ r.broken ? '✓' : '' }}
+              ✓
             </button>
           </td>
           <td class="c weight">
@@ -232,7 +232,7 @@ function onMv(e: Event) {
               data-testid="toggle-skill"
               @click="store.toggleCondition(c.skillId)"
             >
-              {{ store.conditions.has(c.skillId) ? '✓' : '' }}
+              ✓
             </button>
           </td>
           <td colspan="2" class="cond dim">{{ c.note }}</td>
@@ -337,18 +337,23 @@ function onMv(e: Event) {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+/* mark always rendered (transparent when off): an empty button changes the row height */
 .tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
   width: 18px;
   height: 18px;
   border: 1px solid var(--border-strong);
   border-radius: 3px;
-  text-align: center;
-  line-height: 16px;
   font-size: 12px;
-  color: #1b1710;
+  line-height: 1;
+  color: transparent;
 }
 .tick.on {
   background: var(--gold);
+  color: #1b1710;
 }
 .weight {
   white-space: nowrap;
