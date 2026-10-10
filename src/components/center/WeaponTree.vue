@@ -10,9 +10,9 @@ import { useBuildStore } from '../../stores/build'
 import { useUiStore } from '../../stores/ui'
 import Icon from '../base/Icon.vue'
 
-const CELL_W = 196
+const CELL_W = 168
 const CELL_H = 34
-const NODE_W = 170
+const NODE_W = 146
 
 const build = useBuildStore()
 const ui = useUiStore()
@@ -172,6 +172,7 @@ const elementTitle = (w: Weapon) => w.elements.map((e) => `${elementLabel(e.type
           :style="{ left: `${n.col * CELL_W}px`, top: `${n.row * CELL_H + 3}px`, width: `${NODE_W}px`, height: `${CELL_H - 6}px` }"
           :data-weapon-id="n.id"
           :aria-label="n.weapon.name"
+          :title="n.weapon.name"
           @click="equip(n.weapon)"
         >
           <span class="rar" :style="{ background: `var(--r${n.weapon.rarity})` }" />
@@ -273,8 +274,8 @@ const elementTitle = (w: Weapon) => w.elements.map((e) => `${elementLabel(e.type
   position: absolute;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 6px 0 0;
+  gap: 5px;
+  padding: 0 5px 0 0;
   background: #131a23;
   border: 1px solid #2d2a20;
   border-radius: 2px;

@@ -50,6 +50,16 @@ test('damage output: builds, wounded, state, motion value, weights', async ({ pa
   await page.getByTestId('damage-build').filter({ hasText: 'Weak' }).click()
   await expect(page.getByTestId('damage-column')).toHaveCount(2)
 
+  // current build can be left out
+  await page.getByTestId('damage-current').click()
+  await expect(page.getByTestId('damage-column')).toHaveCount(1)
+  await expect(page.getByTestId('damage-column')).toHaveText('Weak')
+  await page.getByTestId('damage-build').filter({ hasText: 'Weak' }).click()
+  await expect(page.getByTestId('damage-empty')).toBeVisible()
+  await page.getByTestId('damage-build').filter({ hasText: 'Weak' }).click()
+  await page.getByTestId('damage-current').click()
+  await expect(page.getByTestId('damage-column')).toHaveCount(2)
+
   // current (GS II) beats the saved GS I everywhere
   const forearms = cells(page, 'Forearms')
   await expect(forearms.nth(0)).toHaveClass(/best/)
