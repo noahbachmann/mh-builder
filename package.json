@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "data:import": "tsx scripts/import/index.ts"
+    "data:import": "tsx scripts/import/index.ts",
+    "icons:import": "tsx scripts/icons/index.ts"
   },
   "dependencies": {
     "pinia": "^4.0.3",
@@ -23,6 +24,7 @@
     "@vue/test-utils": "^2.5.1",
     "@vue/tsconfig": "^0.9.1",
     "jsdom": "^30.1.2",
+    "svgo": "^4.1.0",
     "tsx": "^4.23.15",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
