@@ -53,7 +53,7 @@ onBeforeUnmount(() => uninstall?.())
         >
           {{ VIEW_LABEL[v] }}
         </button>
-        <span class="kbd" title="Switch page">M</span>
+        <span class="kbd" title="Switch page">S</span>
       </nav>
       <button class="btn help-btn" @click="ui.showHelp = !ui.showHelp"><span class="kbd">?</span> Shortcuts</button>
     </header>

@@ -63,8 +63,8 @@ test('monsters page using keyboard only', async ({ page }) => {
   await page.goto('/?b=1.1jm')
   await page.locator('body').click({ position: { x: 5, y: 5 } })
 
-  // M -> monster list, arrows + Enter pick the second monster
-  await page.keyboard.press('m')
+  // S -> monster list, arrows + Enter pick the second monster
+  await page.keyboard.press('s')
   await expect(page.getByTestId('monster-item').first()).toBeFocused()
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('Enter')
@@ -79,11 +79,11 @@ test('monsters page using keyboard only', async ({ page }) => {
   await page.keyboard.press('ArrowDown')
   await expect(page.getByTestId('toggle-wounded').nth(1)).toBeFocused()
 
-  // F focuses the monster search, Esc leaves it, M goes back
+  // F focuses the monster search, Esc leaves it, S goes back
   await page.keyboard.press('f')
   await expect(page.getByTestId('monster-search')).toBeFocused()
   await page.keyboard.press('Escape')
-  await page.keyboard.press('m')
+  await page.keyboard.press('s')
   await expect(page.getByTestId('view-equipment')).toHaveAttribute('aria-current', 'page')
   await expect(page.locator('[data-region="slots"]:focus')).toHaveCount(1)
 })
