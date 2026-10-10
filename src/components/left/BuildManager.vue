@@ -48,7 +48,6 @@ async function share() {
   }
 }
 
-const date = (t: number) => new Date(t).toLocaleDateString()
 
 // loading replaces the current build: ask first, like the in-game "Load equipment?" prompt
 const pendingLoad = ref<{ name: string; code: string; el: HTMLElement | null } | null>(null)
@@ -92,7 +91,6 @@ function closeLoad(load: boolean) {
             <span class="saved-name">{{ b.name }}</span>
             <span class="faint sub">{{ summaries.get(b.id) }}</span>
           </span>
-          <span class="faint date">{{ date(b.savedAt) }}</span>
         </button>
         <button
           v-focus-cell="{ region: 'builds', row: i + 2, col: 1 }"
@@ -185,10 +183,6 @@ function closeLoad(load: boolean) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.date {
-  margin-left: auto;
-  font-size: 11px;
 }
 .mini {
   display: inline-flex;
