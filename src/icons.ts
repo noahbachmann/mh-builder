@@ -24,6 +24,7 @@ export const icons = {
   decoration: (d: Decoration): IconId => icons.deco(d.size, decoColor(d)),
   slot: (size: number | null): IconId => (size ? `slot/size-${size}` : 'slot/empty'),
   rarity: (n: number): IconId => `rarity/${n}`,
+  monster: (slug: string): IconId => `monster/${slug}`,
   stat: (s: 'attack' | 'affinity' | 'defense' | 'elderseal'): IconId => `stat/${s}`,
   skill: (_id?: string): IconId => 'skill/default',
   placeholder: (): IconId => 'ui/placeholder',

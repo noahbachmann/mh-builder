@@ -5,8 +5,9 @@
  *   1-7       open Weapon / Head / Chest / Arms / Waist / Legs / Charm
  *   8         open Decorations
  *   C         compare saved builds
- *   Q / E     previous / next sidebar tab
- *   A / D     previous / next sub-tab of the open screen (weapon type, rank, equipment piece)
+ *   M         switch Equipment / Monsters page
+ *   Q / E     previous / next sidebar tab (monster tab on the Monsters page)
+ *   A / D     previous / next sub-tab of the open screen (weapon type, rank, equipment piece; loot rank)
  *   F         focus search
  *   Esc       back (close screen -> slot list)
  *   ?         toggle shortcut help
@@ -15,6 +16,7 @@ import { nextTick } from 'vue'
 import { EQUIP_SLOTS, DECO_SLOTS } from '../engine'
 import { WEAPON_TYPES } from '../data/types'
 import { useBuildStore } from '../stores/build'
+import { useMonsterStore } from '../stores/monster'
 import { useUiStore } from '../stores/ui'
 import { focusRegion, moveFocus, type Direction } from './focus-grid'
 
@@ -25,8 +27,9 @@ export const SHORTCUTS: [string, string][] = [
   ['1 – 7', 'Weapon, Head, Chest, Arms, Waist, Legs, Charm'],
   ['8', 'Decorations'],
   ['C', 'Compare saved builds'],
+  ['M', 'Equipment / Monsters page'],
   ['Q / E', 'Previous / next sidebar tab'],
-  ['A / D', 'Previous / next weapon type, rank or equipment piece'],
+  ['A / D', 'Previous / next weapon type, rank, equipment piece or loot rank'],
   ['Tab', 'Next panel'],
   ['F', 'Search'],
   ['?', 'Show / hide this help'],
@@ -41,6 +44,7 @@ const cycle = <T>(list: readonly T[], cur: T, step: number): T =>
 export function installKeyboard(): () => void {
   const ui = useUiStore()
   const build = useBuildStore()
+  const monster = useMonsterStore()
 
   const focusCenter = () => nextTick(() => focusRegion('center') || focusRegion('center-tabs'))
 
@@ -57,6 +61,23 @@ export function installKeyboard(): () => void {
     focusCenter()
   }
 
+  function toggleView() {
+    ui.view = ui.view === 'monsters' ? 'equipment' : 'monsters'
+    if (ui.view === 'equipment') nextTick(() => focusRegion('slots'))
+    // first visit: list renders once the data chunk is loaded
+    else void monster.ensureLoaded().then(() => nextTick(() => focusRegion('monsters')))
+  }
+
+  /** Monsters page keys; false = not handled here */
+  function monsterKey(key: string): boolean {
+    if (key === 'q') monster.cycleTab(-1)
+    else if (key === 'e') monster.cycleTab(1)
+    else if (key === 'a' || key === 'd') {
+      if (monster.tab === 'loot') monster.cycleRank(key === 'a' ? -1 : 1)
+    } else return false
+    return true
+  }
+
   function onKey(e: KeyboardEvent) {
     if (e.ctrlKey || e.metaKey || e.altKey) return
     const t = e.target as HTMLElement | null
@@ -67,7 +88,9 @@ export function installKeyboard(): () => void {
         t.blur()
         focusCenter()
       } else if (ui.showHelp) ui.showHelp = false
-      else if (ui.screen !== 'overview') {
+      else if (ui.view === 'monsters') {
+        if (!focusRegion('monsters')) return
+      } else if (ui.screen !== 'overview') {
         ui.close()
         nextTick(() => focusRegion('slots'))
       } else return
@@ -90,6 +113,19 @@ export function installKeyboard(): () => void {
     }
 
     const key = e.key.toLowerCase()
+    if (key === 'm') {
+      toggleView()
+      e.preventDefault()
+      return
+    }
+    if (ui.view === 'monsters') {
+      if (monsterKey(key)) {
+        e.preventDefault()
+        return
+      }
+      // equipment shortcuts switch back to the Equipment page
+      if (/^[1-8c]$/.test(key)) ui.view = 'equipment'
+    }
     if (/^[1-7]$/.test(key)) {
       ui.openSlot(EQUIP_SLOTS[Number(key) - 1]!)
       focusCenter()

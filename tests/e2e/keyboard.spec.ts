@@ -58,3 +58,32 @@ test('complete a full build using keyboard only', async ({ page }) => {
   await expect(page.locator('[data-region="slots"]:focus')).toHaveCount(1)
   await expect(page).toHaveURL(/\?b=1\./)
 })
+
+test('monsters page using keyboard only', async ({ page }) => {
+  await page.goto('/?b=1.1jm')
+  await page.locator('body').click({ position: { x: 5, y: 5 } })
+
+  // M -> monster list, arrows + Enter pick the second monster
+  await page.keyboard.press('m')
+  await expect(page.getByTestId('monster-item').first()).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(page.getByTestId('monster-name')).toHaveText('Kulu-Ya-Ku')
+
+  // E -> Damage Output, Tab into its controls, Enter toggles the first part's wound
+  await page.keyboard.press('e')
+  await expect(page.getByTestId('mtab-damage')).toHaveAttribute('aria-selected', 'true')
+  await page.getByTestId('toggle-wounded').first().focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByTestId('toggle-wounded').first()).toHaveAttribute('aria-pressed', 'true')
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByTestId('toggle-wounded').nth(1)).toBeFocused()
+
+  // F focuses the monster search, Esc leaves it, M goes back
+  await page.keyboard.press('f')
+  await expect(page.getByTestId('monster-search')).toBeFocused()
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('m')
+  await expect(page.getByTestId('view-equipment')).toHaveAttribute('aria-current', 'page')
+  await expect(page.locator('[data-region="slots"]:focus')).toHaveCount(1)
+})

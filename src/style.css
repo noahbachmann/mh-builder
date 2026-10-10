@@ -318,6 +318,31 @@ input {
   background: transparent;
 }
 
+/* toggle chips (monster state, conditions, builds, ...) */
+.chip {
+  font-size: 12px;
+  padding: 2px 9px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+}
+.chip:hover,
+.chip:focus-visible {
+  color: var(--text);
+  border-color: var(--gold-dim);
+}
+.chip.is-active {
+  color: #1b1710;
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.chip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* v-skill-info targets: info cursor like a tooltip */
 .has-skill-info {
   cursor: help;
