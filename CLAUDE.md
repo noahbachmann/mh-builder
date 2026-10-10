@@ -189,6 +189,7 @@ Deco colors were matched by eye (data color -> source `Color_NN`): white 00, red
 ```
 element/<fire|water|thunder|ice|dragon>   status/<poison|paralysis|sleep|blast>
 stat/<attack|affinity|defense|elderseal>  slot/size-1..4
+monster/<monster slug>                     (list icons from the wiki's "Large Monsters" page)
 ```
 
 **Hand-written:** `ui/save`, `ui/trash` (`.vue`, stroke = currentColor).
@@ -197,7 +198,7 @@ stat/<attack|affinity|defense|elderseal>  slot/size-1..4
 
 ## Item renders
 
-`pnpm renders:import` (`scripts/renders/`) pulls the infobox picture of every weapon and armor piece from the Fextralife MHW wiki (MediaWiki API, cached in `.cache/fextralife/`, rate-limited: the wiki resets connections on bursts) and writes 160px webp files to `public/renders/` plus the id -> file map `src/data/renders.json`. Names that don't match a wiki title get spelling variants (α -> Alpha, `(MR)`, `+`), then the base item's render (same in-game model; `pnpm renders:import --offline` re-applies only this fallback to `renders.json`, no network). Armor uses the male render. Renders show in the Selected Equipment tab, each below its own card (side by side while hovering); items without one show none. Unmatched names: `.cache/fextralife/missing.txt`. Images are Capcom's, via the wiki (fan-made, non-commercial).
+`pnpm renders:import` (`scripts/renders/`) pulls the infobox picture of every weapon, armor piece and large monster from the Fextralife MHW wiki (MediaWiki API, cached in `.cache/fextralife/`, rate-limited: the wiki resets connections on bursts) and writes 160px webp files to `public/renders/` plus the id -> file map `src/data/renders.json`. Names that don't match a wiki title get spelling variants (α -> Alpha, `(MR)`, `+`), then the base item's render (same in-game model; `pnpm renders:import --offline` re-applies only this fallback to `renders.json`, no network). Armor uses the male render. Renders show in the Selected Equipment tab, each below its own card (side by side while hovering); items without one show none. Monster renders (`renders.json` key `monster`, by monster id) show in the field guide; `--monsters` refreshes only monster renders + icons. Unmatched names: `.cache/fextralife/missing.txt`. Images are Capcom's, via the wiki (fan-made, non-commercial).
 
 ## Testing
 
@@ -222,7 +223,7 @@ Package manager: pnpm. Keep this section in sync.
 - `test`: Vitest
 - `test:e2e`: Playwright (builds, then runs against `vite preview` on port 4199)
 - `data:import`: regenerate `src/data/` from the raw source
-- `renders:import`: download item renders + element/status/stat/slot icons from the Fextralife wiki (`--offline`: base-item fallback only)
+- `renders:import`: download item + monster renders and element/status/stat/slot/monster icons from the Fextralife wiki (`--offline`: base-item fallback only; `--monsters`: monster renders + icons only)
 
 CI (`.github/workflows/ci.yml`): PRs to `main` (no plain branch pushes) run `build` (vue-tsc + vite) and `test`, then `test:e2e`; Playwright traces are uploaded on failure.
 CD (`.github/workflows/cd.yml`): a push to `main` runs CI (as a reusable workflow) and a site build in parallel, then deploys `dist/` to GitHub Pages (`https://noahbachmann.github.io/mh-builder/`) only if both pass. Repo Settings → Pages → Source must be "GitHub Actions".
