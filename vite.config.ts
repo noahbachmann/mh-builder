@@ -13,6 +13,8 @@ export default defineConfig({
         // game data changes rarely: own chunk so app updates don't bust its cache
         codeSplitting: {
           groups: [
+            // only the Monsters page needs it: lazy, own chunk
+            { name: 'monster-data', test: /src[\\/]data[\\/](monsters|items)\.json/, priority: 2 },
             { name: 'data', test: /src[\\/]data[\\/].*\.json/ },
             // ~300 tiny lazy SVG components: one request instead of one each
             { name: 'icons', test: /src[\\/]assets[\\/]icons[\\/]/ },
