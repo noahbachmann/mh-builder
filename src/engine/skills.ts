@@ -93,3 +93,21 @@ export function computeSkills(build: Build, db: DataIndex): SkillSummary {
 export function skillLevels(summary: SkillSummary): Map<string, number> {
   return new Map(summary.skills.map((s) => [s.skill.id, s.level]))
 }
+
+export interface SkillUnlocker {
+  secret: Skill
+  /** set bonuses granting the secret, with pieces required */
+  bonuses: { bonus: SetBonus; required: number }[]
+}
+
+/** Secret skills that raise `skillId`'s cap, and the set bonuses that grant them. */
+export function skillUnlockers(skillId: string, db: DataIndex): SkillUnlocker[] {
+  return db.data.skills
+    .filter((s) => s.unlocks === skillId)
+    .map((secret) => ({
+      secret,
+      bonuses: db.data.setBonuses.flatMap((bonus) =>
+        bonus.ranks.filter((r) => r.skillId === secret.id).map((r) => ({ bonus, required: r.required })),
+      ),
+    }))
+}

@@ -4,6 +4,7 @@ import type { SetBonusStatus, SkillTotal } from '../../engine'
 import { db } from '../../data'
 import { useBuildStore } from '../../stores/build'
 import { usePreviewStore } from '../../stores/preview'
+import { vSkillInfo } from '../../stores/skill-info'
 
 const build = useBuildStore()
 const preview = usePreviewStore()
@@ -58,6 +59,7 @@ const bonuses = computed(() => {
       from: a?.pieces ?? 0,
       to: b?.pieces ?? 0,
       ranks: ref.bonus.ranks.map((r) => ({
+        skillId: r.skillId,
         name: db.skill.get(r.skillId)?.name ?? r.skillId,
         required: r.required,
         from: (a?.pieces ?? 0) >= r.required,
@@ -81,7 +83,7 @@ const bonuses = computed(() => {
         :data-testid="`skill-${r.id}`"
         :data-level="r.to"
       >
-        <span class="nm">
+        <span v-skill-info="{ skillId: r.id, level: r.to || r.from }" class="nm">
           {{ r.name }}
           <span v-if="r.secret" class="secret" title="Max level raised by a secret skill">★</span>
         </span>
@@ -104,7 +106,7 @@ const bonuses = computed(() => {
             <span class="num dim"><template v-if="b.to !== b.from">{{ b.from }}→</template>{{ b.to }} pcs</span>
           </div>
           <div v-for="r in b.ranks" :key="r.name" class="rank" :class="{ active: r.to, gained: r.to && !r.from, lost: r.from && !r.to }">
-            <span class="num req">{{ r.required }}</span> {{ r.name }}
+            <span class="num req">{{ r.required }}</span> <span v-skill-info="{ skillId: r.skillId, level: 1 }">{{ r.name }}</span>
           </div>
         </li>
       </ul>

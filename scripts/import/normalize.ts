@@ -65,6 +65,7 @@ export function normalize(src: string): NormalizeResult {
     list[int(r.level) - 1] = r.description_en!
     descByName.set(r.base_name_en!, list)
   }
+  const skillDesc = new Map(csv('skills/skill_base_translations.csv').map((r) => [r.name_en!, r.description_en ?? '']))
   const skills: Skill[] = csv('skills/skill_base.csv').map((r) => {
     const descriptions = descByName.get(r.name_en!) ?? []
     const secret = int(r.secret)
@@ -74,6 +75,7 @@ export function normalize(src: string): NormalizeResult {
       maxLevel: descriptions.length - secret,
       unlockedMaxLevel: descriptions.length,
       unlocks: r.unlocks ? slug(r.unlocks) : null,
+      description: skillDesc.get(r.name_en!) ?? '',
       descriptions,
       iconColor: r.icon_color || null,
     }

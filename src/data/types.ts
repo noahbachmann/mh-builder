@@ -150,6 +150,8 @@ export interface Skill {
   unlockedMaxLevel: number
   /** for "X Secret" skills: id of skill whose cap they raise */
   unlocks: string | null
+  /** general description (what the skill does, all levels) */
+  description: string
   /** description per level, index 0 = level 1 */
   descriptions: string[]
   iconColor: string | null

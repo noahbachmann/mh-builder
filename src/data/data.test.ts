@@ -65,6 +65,10 @@ describe('generated data', () => {
     for (const w of gameData.weapons) expect(w.sharpness === null, w.name).toBe(gun.has(w.type))
   })
 
+  it('every skill has a description', () => {
+    expect(gameData.skills.filter((s) => !s.description).map((s) => s.id)).toEqual([])
+  })
+
   it('skill levels are consistent', () => {
     for (const s of gameData.skills) {
       expect(s.maxLevel, s.name).toBeGreaterThanOrEqual(1)

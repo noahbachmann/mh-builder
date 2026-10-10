@@ -6,10 +6,11 @@
 - `left/BuildManager`: saved builds (`stores/saved.ts`, localStorage codec strings), ⇄ toggles a build into the comparison (ids persisted under `mhw-builder.compare`). Load goes through `base/ConfirmDialog` ("Load equipment?"); save icon = overwrite, trash = delete.
 - `sidebar/`: `Sidebar` tabs -> `OverallStats`, `OverallSkills`, `SelectedEquipment` (two `EquipmentCard`s while previewing, each `ItemRender` (picture only) in the grid row below its own card; URLs from `src/renders.ts`).
 - `center/WeaponTree`: rarity header + column shading from `layout.rarityCols`; element/status icons per node (2 overlap).
-- `base/`: `Icon` (registry id -> inline SVG component from `src/assets/icons` or webp; falls back to placeholder then CSS initials), `SharpnessBar` (CSS), `SlotPips`, `Diff` (value + preview with ▲/▼), `ConfirmDialog` (native modal `<dialog>`, keys don't reach global shortcuts).
+- `base/`: `Icon` (registry id -> inline SVG component from `src/assets/icons` or webp; falls back to placeholder then CSS initials), `SharpnessBar` (CSS), `SlotPips`, `Diff` (value + preview with ▲/▼), `ConfirmDialog` (native modal `<dialog>`, keys don't reach global shortcuts), `SkillInfobox` (mounted once in `App.vue`; skill name, description, every level with the hovered level highlighted, secret/set-bonus unlocks via `engine/skillUnlockers`).
 
 Patterns:
 - Every selectable element: `v-focus-cell="{ region, row, col }"` (`src/input/focus-grid.ts`). Regions: `slots`, `builds`, `center`, `center-tabs`, `deco-slots`, `sidebar-tabs`.
 - Candidates use `v-on="candidate({...})"` from `composables/useCandidate.ts`: hover and focus both set `preview.candidate`; the sidebar reads `preview.stats` / `preview.diff`.
+- Skill names use `v-skill-info="{ skillId, level }"` (`stores/skill-info.ts`): mouse hover only, adds `.has-skill-info` (`cursor: help`) and `data-skill-info`; box is `pointer-events: none`, closes on scroll.
 - Pickers focus the equipped item (or the first item) on mount, like the in-game cursor.
 - `data-testid`s are used by `tests/e2e`; keep them when refactoring.

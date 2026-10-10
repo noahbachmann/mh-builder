@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { indexData, type GameData } from '../data'
 import { emptyBuild, equip, setDecoration } from './build'
-import { computeSkills, skillLevels } from './skills'
+import { computeSkills, skillLevels, skillUnlockers } from './skills'
 
 const skill = (id: string, max: number, unlocked = max, unlocks: string | null = null) => ({
   id,
@@ -9,6 +9,7 @@ const skill = (id: string, max: number, unlocked = max, unlocks: string | null =
   maxLevel: max,
   unlockedMaxLevel: unlocked,
   unlocks,
+  description: id,
   descriptions: Array.from({ length: unlocked }, (_, i) => `L${i + 1}`),
   iconColor: null,
 })
@@ -107,5 +108,17 @@ describe('computeSkills', () => {
     b = equip(b, 'head', 1, db)
     const names = computeSkills(b, db).skills.map((s) => s.skill.id)
     expect(names).toEqual(['critical-eye', 'agitator'])
+  })
+})
+
+describe('skillUnlockers', () => {
+  it('lists the secret skill and the set bonuses granting it', () => {
+    expect(skillUnlockers('agitator', db)).toEqual([
+      { secret: db.skill.get('agitator-secret'), bonuses: [{ bonus: db.setBonus.get('brachy-will'), required: 2 }] },
+    ])
+  })
+
+  it('is empty for skills without a secret', () => {
+    expect(skillUnlockers('critical-eye', db)).toEqual([])
   })
 })

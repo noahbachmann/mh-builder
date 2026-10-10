@@ -6,6 +6,7 @@ import { SLOT_LABEL, capitalize, elementLabel, fmt } from '../../format'
 import { vFocusCell } from '../../input/focus-grid'
 import { useBuildStore } from '../../stores/build'
 import { useUiStore } from '../../stores/ui'
+import { vSkillInfo } from '../../stores/skill-info'
 
 const build = useBuildStore()
 const ui = useUiStore()
@@ -117,7 +118,7 @@ const sharpName = computed(() => {
         <dl class="skills">
           <template v-for="s in stats.skills.skills" :key="s.skill.id">
             <dt>
-              {{ s.skill.name }} <span class="num gold">Lv {{ s.level }}</span>
+              <span v-skill-info="{ skillId: s.skill.id, level: s.level }">{{ s.skill.name }}</span> <span class="num gold">Lv {{ s.level }}</span>
               <span v-if="s.points > s.cap" class="warn num" title="Points above the cap are wasted">(+{{ s.points - s.cap }} over cap)</span>
             </dt>
             <dd class="dim">{{ s.skill.descriptions[s.level - 1] }}</dd>

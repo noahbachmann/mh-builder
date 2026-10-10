@@ -317,3 +317,8 @@ input {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* v-skill-info targets: info cursor like a tooltip */
+.has-skill-info {
+  cursor: help;
+}

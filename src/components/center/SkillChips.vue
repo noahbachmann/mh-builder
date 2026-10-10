@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { db, type SkillRef } from '../../data'
+import { vSkillInfo } from '../../stores/skill-info'
 defineProps<{ skills: SkillRef[] }>()
 </script>
 
 <template>
   <span class="chips">
-    <span v-for="s in skills" :key="s.skillId" class="chip">{{ db.skill.get(s.skillId)?.name }} <b class="num">{{ s.level }}</b></span>
+    <span v-for="s in skills" :key="s.skillId" v-skill-info="{ skillId: s.skillId, level: s.level }" class="chip">{{ db.skill.get(s.skillId)?.name }} <b class="num">{{ s.level }}</b></span>
   </span>
 </template>
 
