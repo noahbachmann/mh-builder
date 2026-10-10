@@ -6,6 +6,7 @@ import { icons } from '../../icons'
 import { SLOT_LABEL } from '../../format'
 import { focusCell, focusRegion, vFocusCell } from '../../input/focus-grid'
 import { useCandidate } from '../../composables/useCandidate'
+import { usePreviewStore } from '../../stores/preview'
 import { useBuildStore } from '../../stores/build'
 import { useUiStore } from '../../stores/ui'
 import Icon from '../base/Icon.vue'
@@ -14,6 +15,7 @@ import SkillChips from './SkillChips.vue'
 const build = useBuildStore()
 const ui = useUiStore()
 const candidate = useCandidate()
+const preview = usePreviewStore()
 const query = ref('')
 
 const pieces = computed(() =>
@@ -130,10 +132,10 @@ const rowOf = (slot: DecoSlot, index: number) => allSlots.value.findIndex((x) =>
           <template v-if="selected">
             <button
               v-focus-cell="{ region: 'center', row: 0, col: 0 }"
-              v-on="candidate({ kind: 'deco', slot: selected.slot, index: selected.index, id: null })"
+              v-on="candidate({ kind: 'deco', slot: selected.slot, index: selected.index, id: null }, () => place(null))"
               class="row-btn deco remove"
+              :class="{ 'is-previewing': preview.isPinned({ kind: 'deco', slot: selected.slot, index: selected.index, id: null }) }"
               data-testid="deco-remove"
-              @click="place(null)"
             >
               <span class="faint">— Remove decoration</span>
             </button>
@@ -141,12 +143,11 @@ const rowOf = (slot: DecoSlot, index: number) => allSlots.value.findIndex((x) =>
               v-for="(d, i) in decos"
               :key="d.id"
               v-focus-cell="{ region: 'center', row: i + 1, col: 0 }"
-              v-on="candidate({ kind: 'deco', slot: selected.slot, index: selected.index, id: d.id })"
+              v-on="candidate({ kind: 'deco', slot: selected.slot, index: selected.index, id: d.id }, () => place(d.id))"
               class="row-btn deco"
-              :class="{ 'is-equipped': currentDeco === d.id }"
+              :class="{ 'is-equipped': currentDeco === d.id, 'is-previewing': preview.isPinned({ kind: 'deco', slot: selected.slot, index: selected.index, id: d.id }) }"
               :data-deco-id="d.id"
               :aria-label="d.name"
-              @click="place(d.id)"
             >
               <Icon :id="icons.decoration(d)" :size="18" :label="String(d.size)" />
               <span class="nm" :class="`r${d.rarity}`">{{ d.name }}</span>
@@ -223,5 +224,30 @@ const rowOf = (slot: DecoSlot, index: number) => allSlots.value.findIndex((x) =>
 }
 .deco.remove {
   display: flex;
+}
+/* narrow center: slots on top, decoration list below; skills under the name */
+@container center (max-width: 599px) {
+  .hint {
+    display: none;
+  }
+  .cols {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 2fr) minmax(0, 3fr);
+  }
+  .slots-col {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-strong);
+  }
+  .filter .search {
+    min-width: 0;
+  }
+  .deco:not(.remove) {
+    grid-template-columns: 20px minmax(0, 1fr) 24px;
+    row-gap: 2px;
+  }
+  .deco .chips {
+    grid-row: 2;
+    grid-column: 2;
+  }
 }
 </style>

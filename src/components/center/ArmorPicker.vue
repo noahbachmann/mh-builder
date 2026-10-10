@@ -5,6 +5,7 @@ import { icons } from '../../icons'
 import { RANK_LABEL, SLOT_LABEL } from '../../format'
 import { focusCell, vFocusCell } from '../../input/focus-grid'
 import { useCandidate } from '../../composables/useCandidate'
+import { usePreviewStore } from '../../stores/preview'
 import { useBuildStore } from '../../stores/build'
 import { useUiStore } from '../../stores/ui'
 import Icon from '../base/Icon.vue'
@@ -14,6 +15,7 @@ import SkillChips from './SkillChips.vue'
 const build = useBuildStore()
 const ui = useUiStore()
 const candidate = useCandidate()
+const preview = usePreviewStore()
 const query = ref('')
 const list = ref<HTMLElement | null>(null)
 
@@ -71,10 +73,10 @@ watch(slot, () => nextTick(focusInitial))
     <div ref="list" class="panel-body list">
       <button
         v-focus-cell="{ region: 'center', row: 0, col: 0 }"
-        v-on="candidate({ kind: 'equip', slot, id: null })"
+        v-on="candidate({ kind: 'equip', slot, id: null }, () => build.equip(slot, null))"
         class="row-btn item remove"
+        :class="{ 'is-previewing': preview.isPinned({ kind: 'equip', slot, id: null }) }"
         data-testid="unequip"
-        @click="build.equip(slot, null)"
       >
         <span class="faint">— Remove {{ SLOT_LABEL[slot].toLowerCase() }} armor</span>
       </button>
@@ -82,12 +84,11 @@ watch(slot, () => nextTick(focusInitial))
         v-for="(a, i) in items"
         :key="a.id"
         v-focus-cell="{ region: 'center', row: i + 1, col: 0 }"
-        v-on="candidate({ kind: 'equip', slot, id: a.id })"
+        v-on="candidate({ kind: 'equip', slot, id: a.id }, () => build.equip(slot, a.id))"
         class="row-btn item"
-        :class="{ 'is-equipped': equippedId === a.id }"
+        :class="{ 'is-equipped': equippedId === a.id, 'is-previewing': preview.isPinned({ kind: 'equip', slot, id: a.id }) }"
         :data-armor-id="a.id"
         :aria-label="a.name"
-        @click="build.equip(slot, a.id)"
       >
         <span class="rarity num" :class="`r${a.rarity}`">R{{ a.rarity }}</span>
         <span class="main">
@@ -163,5 +164,45 @@ watch(slot, () => nextTick(focusInitial))
 }
 .empty {
   padding: 12px;
+}
+/* narrow center: search drops below the title */
+@container center (max-width: 559px) {
+  .panel-head {
+    flex-wrap: wrap;
+  }
+  .head-search {
+    width: 100%;
+    margin-left: 0;
+  }
+  /* name + skills | defense, set | slots */
+  .item:not(.remove) {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-areas:
+      'rar main def'
+      'rar set pips';
+    row-gap: 2px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .rarity {
+    grid-area: rar;
+  }
+  .main {
+    grid-area: main;
+  }
+  .set {
+    grid-area: set;
+  }
+  .item .pips {
+    grid-area: pips;
+    justify-self: end;
+  }
+  .def {
+    grid-area: def;
+    padding-right: 14px;
+  }
+  .count {
+    display: none;
+  }
 }
 </style>

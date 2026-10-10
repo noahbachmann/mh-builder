@@ -8,7 +8,7 @@ export interface SkillInfoTarget {
   level: number
 }
 
-/** Skill under the mouse; `SkillInfobox` renders it next to `anchor`. */
+/** Skill under the mouse (or tapped); `SkillInfobox` renders it next to `anchor`. */
 export const useSkillInfoStore = defineStore('skillInfo', () => {
   const current = shallowRef<(SkillInfoTarget & { anchor: HTMLElement }) | null>(null)
 
@@ -26,22 +26,32 @@ export const useSkillInfoStore = defineStore('skillInfo', () => {
 
 type El = HTMLElement & { _skillInfo?: SkillInfoTarget }
 
-function onEnter(e: Event) {
+function onEnter(e: PointerEvent) {
+  if (e.pointerType !== 'mouse') return
   const el = e.currentTarget as El
   if (el._skillInfo) useSkillInfoStore().show(el._skillInfo, el)
 }
-function onLeave(e: Event) {
-  useSkillInfoStore().hide(e.currentTarget as El)
+function onLeave(e: PointerEvent) {
+  if (e.pointerType === 'mouse') useSkillInfoStore().hide(e.currentTarget as El)
+}
+/** touch has no hover: tap toggles; `SkillInfobox` closes it on a tap elsewhere */
+function onTap(e: PointerEvent) {
+  if (e.pointerType === 'mouse') return
+  const el = e.currentTarget as El
+  const info = useSkillInfoStore()
+  if (info.current?.anchor === el) info.hide()
+  else if (el._skillInfo) info.show(el._skillInfo, el)
 }
 
-/** `v-skill-info="{ skillId, level }"`: hovering shows the skill infobox, cursor becomes `help`. */
+/** `v-skill-info="{ skillId, level }"`: hovering (tapping on touch) shows the skill infobox, cursor becomes `help`. */
 export const vSkillInfo: Directive<El, SkillInfoTarget> = {
   mounted(el, { value }) {
     el._skillInfo = value
     el.classList.add('has-skill-info')
     el.dataset.skillInfo = value.skillId
-    el.addEventListener('mouseenter', onEnter)
-    el.addEventListener('mouseleave', onLeave)
+    el.addEventListener('pointerenter', onEnter)
+    el.addEventListener('pointerleave', onLeave)
+    el.addEventListener('pointerup', onTap)
   },
   updated(el, { value }) {
     el._skillInfo = value
@@ -50,8 +60,9 @@ export const vSkillInfo: Directive<El, SkillInfoTarget> = {
     if (cur?.anchor === el && (cur.skillId !== value.skillId || cur.level !== value.level)) useSkillInfoStore().show(value, el)
   },
   unmounted(el) {
-    el.removeEventListener('mouseenter', onEnter)
-    el.removeEventListener('mouseleave', onLeave)
+    el.removeEventListener('pointerenter', onEnter)
+    el.removeEventListener('pointerleave', onLeave)
+    el.removeEventListener('pointerup', onTap)
     useSkillInfoStore().hide(el)
   },
 }
