@@ -16,7 +16,7 @@ import type { Element, Hitzone, Monster } from '../data/types'
 import { AFFINITY_CAP, ELEMENT_SHARPNESS, RAW_SHARPNESS, WEAK_SPOT_HZV, damageType, tenderize } from './constants'
 import { elementAffinityFactor, rawAffinityFactor } from './efr'
 import { evaluateBuild, type BuildStats } from './evaluate'
-import { WEAK_SPOT_CONDITION, skillEffect } from './skill-effects'
+import { skillEffect } from './skill-effects'
 import { skillLevels } from './skills'
 import { bestOf } from './build-compare'
 import { trueElement, type WeaponStats } from './weapon-stats'
@@ -114,10 +114,14 @@ export function hitDamage(stats: WeaponStats, hitzone: Hitzone, wexLevel: number
   return { raw, element, total: raw + element, rawHzv, weakSpot, affinity }
 }
 
-/** Evaluates a build for the damage table: chosen conditions on, Weakness Exploit left to `hitDamage`. */
+const WEX = 'weakness-exploit'
+
+/**
+ * Evaluates a build for the damage table with the conditional skills in `conditions` (skill ids) on.
+ * Weakness Exploit is left to `hitDamage` (per hitzone); switch it via `DamageSettings.weaknessExploit`.
+ */
 export function evaluateForMonster(build: Build, db: DataIndex, conditions: ReadonlySet<string>): BuildStats {
-  const without = new Set([...conditions].filter((c) => c !== WEAK_SPOT_CONDITION))
-  return evaluateBuild(build, db, { conditions: without })
+  return evaluateBuild(build, db, { conditions: new Set([...conditions].filter((c) => c !== WEX)) })
 }
 
 export interface DamageSettings {
@@ -126,6 +130,8 @@ export interface DamageSettings {
   wounded: ReadonlySet<string>
   mv: number
   sharpnessIndex?: number | null
+  /** apply Weakness Exploit per hitzone (default true) */
+  weaknessExploit?: boolean
 }
 
 export interface DamageRow extends ResolvedPart {
@@ -139,7 +145,7 @@ export interface DamageRow extends ResolvedPart {
 
 /** One row per visible part, one hit per build (stats from `evaluateForMonster`). */
 export function damageTable(m: Monster, builds: (BuildStats | null)[], s: DamageSettings): DamageRow[] {
-  const wex = builds.map((b) => (b ? (skillLevels(b.skills).get('weakness-exploit') ?? 0) : 0))
+  const wex = builds.map((b) => (b && s.weaknessExploit !== false ? (skillLevels(b.skills).get(WEX) ?? 0) : 0))
   return monsterParts(m, s.mode, s.broken).map((p) => {
     const wounded = s.wounded.has(p.part)
     const hits = builds.map((b, i) =>

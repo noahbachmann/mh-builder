@@ -39,7 +39,8 @@ export const useMonsterStore = defineStore('monster', () => {
   const mv = ref(DEFAULT_MV)
   /** sharpness colour index, null = each weapon's top colour */
   const sharpness = ref<number | null>(null)
-  const conditions = ref(new Set<string>())
+  /** conditional skill ids switched on; Weakness Exploit on = applied per hitzone */
+  const conditions = ref(new Set<string>(['weakness-exploit']))
   /** include the equipped build as a column */
   const includeCurrent = ref(true)
 
@@ -101,7 +102,7 @@ export const useMonsterStore = defineStore('monster', () => {
   }
   const toggleBroken = (part: string) => toggleIn(broken, part)
   const toggleWounded = (part: string) => toggleIn(wounded, part)
-  const toggleCondition = (label: string) => toggleIn(conditions, label)
+  const toggleCondition = (skillId: string) => toggleIn(conditions, skillId)
   const weight = (part: string) => weights.value[part] ?? 1
   function setWeight(part: string, w: number) {
     weights.value = { ...weights.value, [part]: Math.max(0, Math.min(MAX_WEIGHT, Math.round(w))) }
@@ -129,7 +130,14 @@ export const useMonsterStore = defineStore('monster', () => {
       ? damageTable(
           monster.value,
           builds.value.map((b) => b.stats),
-          { mode: mode.value, broken: broken.value, wounded: wounded.value, mv: mv.value, sharpnessIndex: sharpness.value },
+          {
+            mode: mode.value,
+            broken: broken.value,
+            wounded: wounded.value,
+            mv: mv.value,
+            sharpnessIndex: sharpness.value,
+            weaknessExploit: conditions.value.has('weakness-exploit'),
+          },
         )
       : [],
   )

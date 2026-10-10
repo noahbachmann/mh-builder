@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '../data'
-import { CONDITIONS, SKILL_EFFECTS, WEAK_SPOT_CONDITION, activeEffects, skillEffect, type SkillEffect } from './skill-effects'
+import { CONDITIONAL_SKILLS, SKILL_EFFECTS, WEAK_SPOT_CONDITION, activeEffects, skillEffect, type SkillEffect } from './skill-effects'
 
 const pct = (m: number | undefined) => (m === undefined ? [] : [Math.round((m - 1) * 100)])
 
@@ -88,12 +88,13 @@ describe('skill effects table', () => {
       ['agitator', 1],
       ['peak-performance', 1],
     ])
-    expect(activeEffects(levels, { conditions: new Set(['Monster enraged']) })).toEqual([skillEffect('agitator', 1)])
+    expect(activeEffects(levels, { conditions: new Set(['agitator']) })).toEqual([skillEffect('agitator', 1)])
     expect(activeEffects(levels, { conditions: new Set() })).toEqual([])
   })
 
-  it('lists every condition with its skills', () => {
-    expect(CONDITIONS.find((c) => c.label === 'Monster enraged')?.skillIds).toEqual(['agitator'])
-    expect(CONDITIONS.find((c) => c.label === WEAK_SPOT_CONDITION)?.skillIds).toEqual(['weakness-exploit'])
+  it('lists every conditional skill with its condition', () => {
+    expect(CONDITIONAL_SKILLS.find((c) => c.skillId === 'agitator')?.label).toBe('Monster enraged')
+    expect(CONDITIONAL_SKILLS.find((c) => c.skillId === 'weakness-exploit')?.label).toBe(WEAK_SPOT_CONDITION)
+    expect(CONDITIONAL_SKILLS.some((c) => c.skillId === 'attack-boost')).toBe(false)
   })
 })

@@ -167,26 +167,22 @@ export function skillEffect(skillId: string, level: number): SkillEffect | null 
 export interface EffectOptions {
   /** apply every conditional effect ("all conditions met") */
   includeConditional?: boolean
-  /** apply only the conditional effects with these `conditional` labels */
+  /** apply the conditional effects of these skill ids */
   conditions?: ReadonlySet<string>
 }
 
-/** Every condition label with the skills that use it, in table order. */
-export const CONDITIONS: { label: string; skillIds: string[] }[] = (() => {
-  const out = new Map<string, string[]>()
-  for (const [id, levels] of Object.entries(SKILL_EFFECTS)) {
-    const label = levels.find((e) => e.conditional)?.conditional
-    if (label) out.set(label, [...(out.get(label) ?? []), id])
-  }
-  return [...out].map(([label, skillIds]) => ({ label, skillIds }))
-})()
+/** Skills with a conditional effect and their condition label, in table order. */
+export const CONDITIONAL_SKILLS: { skillId: string; label: string }[] = Object.entries(SKILL_EFFECTS).flatMap(([skillId, levels]) => {
+  const label = levels.find((e) => e.conditional)?.conditional
+  return label ? [{ skillId, label }] : []
+})
 
 /** All active effects for a set of skill levels. */
 export function activeEffects(levels: Map<string, number>, opts: EffectOptions = {}): SkillEffect[] {
   const out: SkillEffect[] = []
   for (const [id, level] of levels) {
     const e = skillEffect(id, level)
-    if (e && (!e.conditional || opts.includeConditional || opts.conditions?.has(e.conditional))) out.push(e)
+    if (e && (!e.conditional || opts.includeConditional || opts.conditions?.has(id))) out.push(e)
   }
   return out
 }
