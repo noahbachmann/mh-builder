@@ -16,7 +16,7 @@ const items = computed(() =>
 <template>
   <span class="pips" :class="{ names }">
     <span v-for="(s, i) in items" :key="i" class="pip" :title="s.deco ? `${s.deco.name} (size ${s.size} slot)` : `Empty size ${s.size} slot`">
-      <Icon :id="s.deco ? icons.deco(s.deco.size) : icons.slot(s.size)" :size="16" :label="String(s.size)" />
+      <Icon :id="s.deco ? icons.decoration(s.deco) : icons.slot(s.size)" :size="16" :label="String(s.size)" />
       <span v-if="names" :class="s.deco ? '' : 'faint'">{{ s.deco?.name ?? `— (${s.size})` }}</span>
     </span>
     <span v-if="!slots.length" class="faint">{{ names ? "None" : "—" }}</span>

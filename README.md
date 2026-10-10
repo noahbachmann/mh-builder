@@ -31,4 +31,4 @@ Game data comes from [MHWorldData](https://github.com/gatheringhallstudios/MHWor
 
 ## Icons
 
-The repo has no icons yet. Put webp files in `public/icons/` using the names listed in `CLAUDE.md`. Until a file exists, the app falls back to `ui/placeholder.webp` and then to a text badge.
+Weapon, armor, charm and decoration icons come from [MHW_Icons_SVG](https://github.com/OthelloRhin/MHW_Icons_SVG) by Thibault "Othello" Benoit (MIT, see `src/assets/icons/LICENSE-MHW_Icons_SVG`). `pnpm icons:import` regenerates them as Vue components in `src/assets/icons/`. Other icons (elements, stats, slots, ...) can be added as `src/assets/icons/<id>.webp` using the IDs listed in `CLAUDE.md`; until then the app shows a text badge.

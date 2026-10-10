@@ -11,7 +11,13 @@ export default defineConfig({
     rolldownOptions: {
       output: {
         // game data changes rarely: own chunk so app updates don't bust its cache
-        codeSplitting: { groups: [{ name: 'data', test: /src[\\/]data[\\/].*\.json/ }] },
+        codeSplitting: {
+          groups: [
+            { name: 'data', test: /src[\\/]data[\\/].*\.json/ },
+            // ~300 tiny lazy SVG components: one request instead of one each
+            { name: 'icons', test: /src[\\/]assets[\\/]icons[\\/]/ },
+          ],
+        },
       },
     },
     // data chunk is ~1.8 MB raw / ~145 kB gzip by design

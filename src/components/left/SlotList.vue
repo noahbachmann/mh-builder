@@ -20,10 +20,10 @@ const rows = computed(() =>
       id === null ? null : slot === 'weapon' ? db.weapon.get(id) : slot === 'charm' ? db.charm.get(id) : db.armor.get(id)
     const icon =
       slot === 'weapon'
-        ? icons.weapon(item && 'type' in item ? (item.type as never) : 'great-sword')
+        ? icons.weapon(item && 'type' in item ? (item.type as never) : 'great-sword', item?.rarity)
         : slot === 'charm'
-          ? icons.charm()
-          : icons.armor(slot)
+          ? icons.charm(item?.rarity)
+          : icons.armor(slot, item?.rarity)
     const slots = item && 'slots' in item ? item.slots : []
     return { slot, item, icon, slots, decos: slot === 'charm' ? [] : build.build.decorations[slot] }
   }),
