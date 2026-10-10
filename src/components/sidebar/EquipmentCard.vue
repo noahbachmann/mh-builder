@@ -66,10 +66,10 @@ const skillClass = (s: SkillRef) => {
 const icon = computed(() => {
   const c = props.card
   if (!c) return icons.placeholder()
-  if (c.kind === 'weapon') return icons.weapon(c.item.type)
-  if (c.kind === 'armor') return icons.armor(c.item.type)
-  if (c.kind === 'deco') return icons.deco(c.item.size)
-  return icons.charm()
+  if (c.kind === 'weapon') return icons.weapon(c.item.type, c.item.rarity)
+  if (c.kind === 'armor') return icons.armor(c.item.type, c.item.rarity)
+  if (c.kind === 'deco') return icons.decoration(c.item)
+  return icons.charm(c.item.rarity)
 })
 const subtitle = computed(() => {
   const c = props.card

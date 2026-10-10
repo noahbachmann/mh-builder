@@ -148,7 +148,7 @@ const rowOf = (slot: DecoSlot, index: number) => allSlots.value.findIndex((x) =>
               :aria-label="d.name"
               @click="place(d.id)"
             >
-              <Icon :id="icons.deco(d.size)" :size="18" :label="String(d.size)" />
+              <Icon :id="icons.decoration(d)" :size="18" :label="String(d.size)" />
               <span class="nm" :class="`r${d.rarity}`">{{ d.name }}</span>
               <SkillChips :skills="d.skills" />
             </button>

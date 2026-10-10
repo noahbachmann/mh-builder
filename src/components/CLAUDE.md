@@ -4,7 +4,7 @@
 - `center/`: `WeaponTree` (type tabs, bands, SVG edges from `engine/tree-layout`, search), `ArmorPicker` (rank tabs), `CharmPicker`, `DecorationScreen` (slot column + deco list filtered by size), `BuildOverview` (default screen: equipment, EFR/EFE breakdown, skill descriptions), `CompareScreen` (current build + up to 3 saved builds side by side, from `stores/compare.ts`).
 - `left/BuildManager`: saved builds (`stores/saved.ts`, localStorage codec strings), ⇄ toggles a build into the comparison (ids persisted under `mhw-builder.compare`).
 - `sidebar/`: `Sidebar` tabs -> `OverallStats`, `OverallSkills`, `SelectedEquipment` (two `EquipmentCard`s while previewing).
-- `base/`: `Icon` (registry id -> webp, falls back to placeholder then CSS initials), `SharpnessBar` (CSS), `SlotPips`, `Diff` (value + preview with ▲/▼).
+- `base/`: `Icon` (registry id -> inline SVG component from `src/assets/icons` or webp; falls back to placeholder then CSS initials), `SharpnessBar` (CSS), `SlotPips`, `Diff` (value + preview with ▲/▼).
 
 Patterns:
 - Every selectable element: `v-focus-cell="{ region, row, col }"` (`src/input/focus-grid.ts`). Regions: `slots`, `builds`, `center`, `center-tabs`, `deco-slots`, `sidebar-tabs`.

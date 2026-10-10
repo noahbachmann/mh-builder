@@ -1,38 +1,38 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { PLACEHOLDER, iconPath, isMissing, markMissing, type IconId } from '../../icons'
+import { resolveIcon, type IconId } from '../../icons'
 
 const props = withDefaults(defineProps<{ id: IconId; size?: number; label?: string }>(), { size: 20, label: '' })
 
-// fallback chain: real icon -> placeholder.webp -> CSS box with initials
-const stage = ref<0 | 1 | 2>(0)
-const path = computed(() => iconPath(props.id))
-watch(
-  path,
-  (p) => {
-    stage.value = !isMissing(p) ? 0 : !isMissing(PLACEHOLDER) ? 1 : 2
-  },
-  { immediate: true },
-)
-const src = computed(() => (stage.value === 0 ? path.value : PLACEHOLDER))
+// fallback chain: icon -> placeholder icon -> CSS box with initials
+const source = computed(() => resolveIcon(props.id))
+const broken = ref(false)
+watch(source, () => (broken.value = false))
 const initials = computed(() => (props.label || props.id.split('/').pop() || '?').replace(/[^a-z0-9]/gi, '').slice(0, 2))
-
-function onError() {
-  markMissing(src.value)
-  stage.value = stage.value === 0 && !isMissing(PLACEHOLDER) ? 1 : 2
-}
 </script>
 
 <template>
-  <img
-    v-if="stage < 2"
+  <component
+    :is="source.component"
+    v-if="source?.kind === 'component'"
     class="icon"
-    :src="src"
+    :width="size"
+    :height="size"
+    :role="label ? 'img' : undefined"
+    :aria-label="label || undefined"
+    :aria-hidden="label ? undefined : 'true'"
+    :data-icon="id"
+  />
+  <img
+    v-else-if="source?.kind === 'image' && !broken"
+    class="icon"
+    :src="source.url"
     :width="size"
     :height="size"
     :alt="label"
     loading="lazy"
-    @error="onError"
+    :data-icon="id"
+    @error="broken = true"
   />
   <span v-else class="icon icon-fallback" :style="{ width: `${size}px`, height: `${size}px`, fontSize: `${size * 0.42}px` }" :title="label" aria-hidden="true">{{ initials }}</span>
 </template>

@@ -108,7 +108,7 @@ const mainElement = (w: Weapon) => w.elements[0]
         <ul v-if="matches.length" class="suggestions panel">
           <li v-for="m in matches" :key="m.id">
             <button class="row-btn" @mousedown.prevent="jumpTo(m)">
-              <Icon :id="icons.weapon(m.type)" :size="16" />
+              <Icon :id="icons.weapon(m.type, m.rarity)" :size="16" />
               <span :class="`r${m.rarity}`">{{ m.name }}</span>
               <span class="faint">{{ WEAPON_TYPE_LABEL[m.type] }}</span>
             </button>

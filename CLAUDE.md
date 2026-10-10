@@ -49,11 +49,12 @@ Everything is unlocked: every weapon and armor piece is available, and armor is 
 ## Architecture
 
 ```
-public/
-  icons/          placeholder icons (see "Icons" below)
+public/           favicon
 scripts/
   import/         converts the raw data source into normalized JSON
+  icons/          generates src/assets/icons/*.vue from the SVG icon set
 src/
+  assets/icons/   generated icon components (see "Icons")
   data/           generated, committed JSON (weapons, armor, charms, decorations, skills, set bonuses)
   engine/         pure TypeScript, no Vue imports (summary: src/engine/CLAUDE.md)
     constants.ts      all damage constants with sources
@@ -70,7 +71,7 @@ src/
   stores/         Pinia stores
   components/     slot list, right sidebar (tabs + compare window), center panel, item pickers, weapon tree, decoration screen
   input/          focus grid + keyboard shortcuts
-  icons.ts        icon registry: icon ID -> file path
+  icons.ts        icon registry: icon ID -> lazy SVG component or webp URL
 tests/
   e2e/            Playwright specs
 ```
@@ -168,31 +169,23 @@ The game shows the hunter model here. We use the space for information the game 
 
 ## Icons
 
-**Use placeholders only. Do not create, draw or download real icons.** The owner adds the real image files manually. Code refers to icons only by ID through `src/icons.ts`; a missing file falls back to a generic placeholder.
+Code refers to icons only by ID through `src/icons.ts`; an ID without a file falls back to `ui/placeholder`, then to a CSS initials badge.
 
-All icons are webp in `public/icons/`, kebab-case. Expected files:
+**Imported set:** `pnpm icons:import` turns [MHW_Icons_SVG](https://github.com/OthelloRhin/MHW_Icons_SVG) (MIT, pinned commit in `scripts/icons/index.ts`) into one SVGO-optimized Vue component per icon in `src/assets/icons/<id>.vue` (generated, committed, do not edit). They are lazy-loaded through `import.meta.glob`, bundled into one `icons` chunk and rendered inline (no asset URLs). Covered:
 
 ```
-weapon/great-sword.webp       weapon/long-sword.webp        weapon/sword-and-shield.webp
-weapon/dual-blades.webp       weapon/hammer.webp            weapon/hunting-horn.webp
-weapon/lance.webp             weapon/gunlance.webp          weapon/switch-axe.webp
-weapon/charge-blade.webp      weapon/insect-glaive.webp     weapon/light-bowgun.webp
-weapon/heavy-bowgun.webp      weapon/bow.webp
+weapon/<weapon-type>/<rarity 1-12>     armor/<head|chest|arms|waist|legs>/<rarity 1-12>     charm/<rarity 1-12>
+deco/<skill icon color, kebab-case>/size-<1-4>    (colored by the jewel's first skill, like in-game)
+```
 
-armor/head.webp  armor/chest.webp  armor/arms.webp  armor/waist.webp  armor/legs.webp
-charm.webp
+The deco color mapping (data color name -> source color number) was matched by eye; see `DECO_COLOR`.
 
-element/fire.webp  element/water.webp  element/thunder.webp  element/ice.webp  element/dragon.webp
-status/poison.webp  status/paralysis.webp  status/sleep.webp  status/blast.webp
+**Not covered** (no source yet; still initials): add by hand as `src/assets/icons/<id>.webp` (imported as a URL). Do not create, draw or download other icons unless the owner asks.
 
-deco/size-1.webp  deco/size-2.webp  deco/size-3.webp  deco/size-4.webp
-slot/size-1.webp  slot/size-2.webp  slot/size-3.webp  slot/size-4.webp  slot/empty.webp
-
-rarity/1.webp ... rarity/12.webp
-
-stat/attack.webp  stat/affinity.webp  stat/defense.webp  stat/elderseal.webp
-skill/default.webp            (optional per-skill icons: skill/<skill-id>.webp)
-ui/placeholder.webp           (fallback for any missing icon)
+```
+element/<fire|water|thunder|ice|dragon>   status/<poison|paralysis|sleep|blast>
+slot/size-1..4  slot/empty   rarity/1..12   stat/<attack|affinity|defense|elderseal>
+skill/default (optional skill/<skill-id>)   ui/placeholder
 ```
 
 ## Testing
@@ -218,6 +211,7 @@ Package manager: pnpm. Keep this section in sync.
 - `test`: Vitest
 - `test:e2e`: Playwright (builds, then runs against `vite preview` on port 4199)
 - `data:import`: regenerate `src/data/` from the raw source
+- `icons:import`: regenerate `src/assets/icons/` from the pinned SVG icon set
 
 CI (`.github/workflows/ci.yml`): every push and PRs to `main` run `build` (vue-tsc + vite) and `test`, then `test:e2e`; Playwright traces are uploaded on failure.
 
