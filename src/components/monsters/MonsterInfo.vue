@@ -51,7 +51,7 @@ const fromRewards = computed(() => {
       </tbody>
     </table>
 
-    <div class="section-title">Breakable parts</div>
+    <div class="section-title">Parts: flinch / break / sever damage</div>
     <table v-if="m.parts.length" class="tbl parts" data-testid="monster-parts">
       <thead>
         <tr>
@@ -72,11 +72,12 @@ const fromRewards = computed(() => {
         </tr>
       </tbody>
     </table>
-    <template v-else>
-      <ul v-if="fromRewards.length" class="plain" data-testid="monster-parts">
+    <p v-else class="note faint">No break thresholds in the data for this monster.</p>
+    <template v-if="fromRewards.length">
+      <div class="section-title">Break / sever rewards</div>
+      <ul class="plain" :data-testid="m.parts.length ? 'monster-break-rewards' : 'monster-parts'">
         <li v-for="p in fromRewards" :key="`${p.part}-${p.sever}`">{{ p.part }} <span class="dim">{{ p.sever ? 'severable' : 'breakable' }}</span></li>
       </ul>
-      <p class="note faint">No break thresholds in the data for this monster; parts taken from its break / carve rewards.</p>
     </template>
   </div>
 </template>

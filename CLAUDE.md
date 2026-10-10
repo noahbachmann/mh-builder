@@ -111,12 +111,16 @@ All constants below must be verified against a trusted reference and covered by 
   Bloat values: Great Sword 4.8, Long Sword 3.3, Sword & Shield 1.4, Dual Blades 1.4, Hammer 5.2, Hunting Horn 4.2, Lance 2.3, Gunlance 2.3, Switch Axe 3.5, Charge Blade 3.6, Insect Glaive 3.1, Light Bowgun 1.3, Heavy Bowgun 1.5, Bow 1.2.
 - **Displayed element** = true element x 10.
 - **Raw sharpness multipliers**: red 0.50, orange 0.75, yellow 1.00, green 1.05, blue 1.20, white 1.32, purple 1.39.
-- **Element sharpness multipliers**: red 0.25, orange 0.50, yellow 0.75, green 1.00, blue 1.0625, white 1.15, purple 1.27.
+- **Element sharpness multipliers**: red 0.25, orange 0.50, yellow 0.75, green 1.00, blue 1.0625, white 1.15, purple 1.25 (Fextralife "Sharpness"; an older value of 1.27 was wrong).
 - **Crit multiplier (raw)**: 1.25 base; Critical Boost raises it (1.30 / 1.35 / 1.40). Negative affinity uses 0.75.
 - **EFR** = true raw x raw sharpness multiplier x (1 + affinity x (crit multiplier - 1)), using the negative-affinity multiplier when affinity < 0. Affinity is capped at 100%.
-- **EFE** = true element x element sharpness multiplier x (1 + affinity x (element crit multiplier - 1)), where the element crit multiplier only applies with Critical Element (or Safi/Kjárr equivalents) and depends on weapon class. Look up the per-class values; do not guess them.
-- Element boosts are limited by the **element cap**. Implement the cap rule from a reference, with tests.
-- Percentage raw bonuses and flat raw bonuses must be applied in the correct order; confirm the order from a reference and test it.
+- **EFE** = true element x element sharpness multiplier x (1 + affinity x (element crit multiplier - 1)), element crit only on positive affinity. Critical Element 1.5 (GS / Hammer / HH / HBG), 1.35 (others), 1.25 (LBG); True Critical Element 1.7 / 1.55 / 1.4 (Fextralife).
+- **Non-elemental Boost**: x1.05 on base raw (Iceborne), cancelled by any active element or status, or any elemental ammo on a bowgun. **Free Elem**: 33 / 66 / 100 % of the hidden value.
+- **Weakness Exploit**: 10 / 15 / 30 % affinity on weak spots (raw HZV >= 45), +5 / 15 / 20 % extra when that weak spot is wounded.
+- **"All conditions met"** (comparison): every situational skill except draw-only Critical Draw; Peak Performance (full health) and Heroics / Resentment (low health) never together, the better of the two is kept (`POTENTIAL_CONDITIONS`). The Damage Output toggles enforce the same conflict.
+- Skills that change damage but have no numbers in the data or only affect some moves (`UNMODELLED_DAMAGE_SKILLS`) are listed as "not calculated", never guessed.
+- Element boosts are limited by the **element cap** (no verified Iceborne rule yet, see Open decisions).
+- Raw = base true raw x multipliers (NEB, Offensive Guard, Heroics) + flat bonuses (Fextralife: NEB is "based on the weapon's base raw"; see Open decisions).
 - Gunner weapons (bowguns, bow) have no sharpness; EFR uses multiplier 1.0 for that term.
 
 ## UI
@@ -243,6 +247,7 @@ CD (`.github/workflows/cd.yml`): a push to `main` runs CI (as a reusable workflo
 ## Open decisions
 
 - **Element cap**: no trusted reference for the Iceborne rule was found, so `elementCap()` in `engine/constants.ts` returns null (uncapped) and is marked UNVERIFIED. The UI says so.
-- **Order of operations**: raw = base true raw x multipliers + flat bonuses (community formula). This still needs to be confirmed against a known in-game value.
-- **Wound (tenderize)**: raw hitzone -> floor(0.75 x HZV + 25), elemental unchanged; derived from the wiki's tenderized Nergigante values (all match), not from an official formula. Which parts can be wounded isn't in the data: every part can be toggled. Weakness Exploit's wound bonus is applied on any wounded part (also below 45).
+- **Order of operations**: raw = base true raw x multipliers + flat bonuses (community formula, consistent with Fextralife's NEB text). No full formula source found; confirm against a known in-game value.
+- **Lance / gunners**: Lance uses the sever hitzone (forum claim "better of sever / blunt" unverified); bow / bowgun critical distance and ammo motion values are not modelled. The Damage Output tab says so per weapon type.
+- **Wound (tenderize)**: raw hitzone -> floor(0.75 x HZV + 25), elemental unchanged; derived from the wiki's tenderized Nergigante values (all match), not from an official formula. Which parts can be wounded isn't in the data: every part can be toggled. Weakness Exploit's wound bonus applies only to wounded parts that are weak spots (>= 45 after wounding): the skill text calls it "extra" and Fextralife says the skill only works on weak spots.
 - Weapon tree bands are unlabeled (alternating shading; `TreeBand.label` holds the root weapon name) because the source has no tree names ("Ore Tree", ...).

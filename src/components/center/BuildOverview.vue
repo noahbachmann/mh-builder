@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { db } from '../../data'
-import { EQUIP_SLOTS, SHARPNESS_COLORS, skillEffect } from '../../engine'
+import { EQUIP_SLOTS, SHARPNESS_COLORS, UNMODELLED_DAMAGE_SKILLS, skillEffect } from '../../engine'
 import { SLOT_LABEL, capitalize, elementLabel, fmt } from '../../format'
 import { vFocusCell } from '../../input/focus-grid'
 import { useBuildStore } from '../../stores/build'
@@ -30,6 +30,12 @@ const conditional = computed(() =>
     .map((s) => ({ s, e: skillEffect(s.skill.id, s.level) }))
     .filter((x) => x.e?.conditional)
     .map((x) => ({ name: x.s.skill.name, level: x.s.level, when: x.e!.conditional! })),
+)
+
+const unmodelled = computed(() =>
+  stats.value.skills.skills
+    .filter((s) => s.skill.id in UNMODELLED_DAMAGE_SKILLS)
+    .map((s) => ({ name: s.skill.name, level: s.level, why: UNMODELLED_DAMAGE_SKILLS[s.skill.id]! })),
 )
 
 const sharpName = computed(() => {
@@ -110,6 +116,10 @@ const sharpName = computed(() => {
         <div v-if="conditional.length" class="note">
           <span class="dim">Not included (situational):</span>
           <span v-for="c in conditional" :key="c.name" class="cond">{{ c.name }} {{ c.level }} <span class="faint">— {{ c.when }}</span></span>
+        </div>
+        <div v-if="unmodelled.length" class="note" data-testid="overview-unmodelled">
+          <span class="dim">Not calculated:</span>
+          <span v-for="u in unmodelled" :key="u.name" class="cond">{{ u.name }} {{ u.level }} <span class="faint">— {{ u.why }}</span></span>
         </div>
       </template>
 

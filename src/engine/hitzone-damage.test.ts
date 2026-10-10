@@ -47,7 +47,7 @@ const monster = (hitzones: Hitzone[]): Monster => ({
   rewards: [],
 })
 
-// 200 true raw, purple (1.39 raw / 1.27 element) at Handicraft 0
+// 200 true raw, purple (1.39 raw / 1.25 element) at Handicraft 0
 const stats = (over: Parameters<typeof weapon>[0] = {}, effects: SkillEffect[] = []) => computeWeaponStats(weapon(over), effects)
 const hit = (s = stats(), h = hz('Head'), wex = 0, opts = {}) => hitDamage(s, h, wex, { mv: 100, wounded: false, ...opts })
 
@@ -84,11 +84,13 @@ describe('hitDamage', () => {
   })
 
   it('wounded: tenderized HZV and the wound bonus', () => {
-    // 20 -> 40: not a weak spot, wound bonus +20 only
+    // 20 -> 40: still not a weak spot, so no Weakness Exploit at all (the wound bonus is extra on weak spots)
     const soft = hit(stats(), hz('A', { cut: 20 }), 3, { wounded: true })
     expect(soft.rawHzv).toBe(40)
-    expect(soft.affinity).toBe(20)
-    expect(soft.raw).toBeCloseTo(200 * 1.39 * 0.4 * (1 + 0.2 * 0.25))
+    expect(soft.affinity).toBe(0)
+    expect(soft.raw).toBeCloseTo(200 * 1.39 * 0.4)
+    // 30 -> 47: wounding makes it a weak spot, 30 + 20
+    expect(hit(stats(), hz('A', { cut: 30 }), 3, { wounded: true }).affinity).toBe(50)
     // 45 -> 58: weak spot 30 + wound 20
     expect(hit(stats(), hz('A', { cut: 45 }), 3, { wounded: true }).affinity).toBe(50)
     // without the skill wounding still tenderizes
@@ -116,7 +118,7 @@ describe('hitDamage', () => {
 
   it('element: true element x element sharpness x elemental HZV', () => {
     const d = hit(stats({ elements: [{ type: 'fire', value: 300, hidden: false }] }))
-    expect(d.element).toBeCloseTo(30 * 1.27 * 0.2)
+    expect(d.element).toBeCloseTo(30 * 1.25 * 0.2)
     expect(d.total).toBeCloseTo(d.raw + d.element)
   })
 
@@ -129,15 +131,15 @@ describe('hitDamage', () => {
         { type: 'ice', value: 200, hidden: false },
       ],
     })
-    expect(hit(s).element).toBeCloseTo((30 * 1.27 * 0.2 + 20 * 1.27 * 0.3) / 2)
+    expect(hit(s).element).toBeCloseTo((30 * 1.25 * 0.2 + 20 * 1.25 * 0.3) / 2)
   })
 
   it('hidden element only counts with Free Element, scaled by its level', () => {
     const hidden = { elements: [{ type: 'water' as const, value: 300, hidden: true }] }
     expect(hit(stats(hidden)).element).toBe(0)
     // Free Elem 1 / 3: 33% / 100% of the hidden value; Rathalos-like water HZV 10
-    expect(hit(stats(hidden, [{ freeElement: 0.33 }])).element).toBeCloseTo(30 * 0.33 * 1.27 * 0.1)
-    expect(hit(stats(hidden, [{ freeElement: 1 }])).element).toBeCloseTo(30 * 1.27 * 0.1)
+    expect(hit(stats(hidden, [{ freeElement: 0.33 }])).element).toBeCloseTo(30 * 0.33 * 1.25 * 0.1)
+    expect(hit(stats(hidden, [{ freeElement: 1 }])).element).toBeCloseTo(30 * 1.25 * 0.1)
   })
 
   it('status adds no damage', () => {
@@ -147,7 +149,7 @@ describe('hitDamage', () => {
   it('critical element uses the affinity incl. Weakness Exploit', () => {
     const s = stats({ affinity: 70, elements: [{ type: 'fire', value: 300, hidden: false }] }, [{ critElement: 'normal' }])
     // GS: 1.5 element crit, 70 + 30 = 100% affinity
-    expect(hit(s, hz('Head'), 3).element).toBeCloseTo(30 * 1.27 * 0.2 * 1.5)
+    expect(hit(s, hz('Head'), 3).element).toBeCloseTo(30 * 1.25 * 0.2 * 1.5)
   })
 })
 

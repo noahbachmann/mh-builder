@@ -3,7 +3,7 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import { db } from '../data'
 import { loadMonsters, type MonsterIndex } from '../data/monsters'
 import type { Rank } from '../data/types'
-import { damageTable, defaultMode, evaluateForMonster, weightedAverage } from '../engine'
+import { CONDITION_CONFLICTS, damageTable, defaultMode, evaluateForMonster, weightedAverage } from '../engine'
 import { useCompareStore } from './compare'
 import { useUiStore } from './ui'
 
@@ -102,7 +102,14 @@ export const useMonsterStore = defineStore('monster', () => {
   }
   const toggleBroken = (part: string) => toggleIn(broken, part)
   const toggleWounded = (part: string) => toggleIn(wounded, part)
-  const toggleCondition = (skillId: string) => toggleIn(conditions, skillId)
+  /** switching a health condition on switches off the ones it can't coexist with */
+  function toggleCondition(skillId: string) {
+    const next = new Set(conditions.value)
+    if (next.delete(skillId)) return void (conditions.value = next)
+    next.add(skillId)
+    for (const c of CONDITION_CONFLICTS[skillId] ?? []) next.delete(c)
+    conditions.value = next
+  }
   const weight = (part: string) => weights.value[part] ?? 1
   function setWeight(part: string, w: number) {
     weights.value = { ...weights.value, [part]: Math.max(0, Math.min(MAX_WEIGHT, Math.round(w))) }

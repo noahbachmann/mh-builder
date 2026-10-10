@@ -127,6 +127,7 @@ export const SKILL_EFFECTS: Table = {
       conditional: 'After recovering from a blight',
     }),
   ),
+  'affinity-sliding': [{ affinity: 30, conditional: 'After sliding' }],
   'non-elemental-boost': [{ nonElementalBoost: true }],
   'critical-element': [{ critElement: 'normal' }],
   'true-critical-element': [{ critElement: 'true' }],
@@ -176,6 +177,52 @@ export const CONDITIONAL_SKILLS: { skillId: string; label: string }[] = Object.e
   const label = levels.find((e) => e.conditional)?.conditional
   return label ? [{ skillId, label }] : []
 })
+
+/**
+ * Skills that change damage but aren't in the table: the data gives no numbers, or they affect only some
+ * moves / ammo / status. Shown as "not included" so totals don't silently mislead.
+ */
+export const UNMODELLED_DAMAGE_SKILLS: Readonly<Record<string, string>> = {
+  fortify: 'attack up after each faint',
+  airborne: 'jumping attacks only',
+  'elemental-airborne': 'jumping attacks only',
+  'punishing-draw': 'draw attacks only',
+  bludgeoner: 'attack up as sharpness drops',
+  frostcraft: 'attack up while the frost aura lasts',
+  'element-acceleration': 'element up while attacking',
+  'true-element-acceleration': 'element up while attacking',
+  'dragonvein-awakening': 'element / affinity up with weapon drawn',
+  'true-dragonvein-awakening': 'element / affinity up with weapon drawn',
+  'element-conversion': 'element up from armor resistances',
+  'critical-status': 'status on crits (status not calculated)',
+  'true-critical-status': 'status on crits (status not calculated)',
+  'normal-shots': 'ammo / arrow type only',
+  'piercing-shots': 'ammo / arrow type only',
+  'spread-power-shots': 'ammo / arrow type only',
+  'special-ammo-boost': 'special ammo only',
+  artillery: 'shelling, phials, Wyvern\'s Fire',
+  'heavy-artillery': 'siege weapons only',
+}
+
+/** Conditions that can't hold together: Peak Performance needs full health, Heroics / Resentment low or red health. */
+export const CONDITION_CONFLICTS: Readonly<Record<string, readonly string[]>> = {
+  'peak-performance': ['heroics', 'resentment'],
+  heroics: ['peak-performance'],
+  resentment: ['peak-performance'],
+}
+
+/** Only one move benefits (draw attacks), so never part of "all conditions met". */
+const MOVE_ONLY = new Set(['critical-draw'])
+
+/**
+ * Condition sets for "all conditions met": every situational skill except move-only ones, once with full
+ * health (Peak Performance) and once with low health (Heroics + Resentment). Callers keep the better one.
+ */
+export const POTENTIAL_CONDITIONS: ReadonlySet<string>[] = (() => {
+  const health = new Set(Object.keys(CONDITION_CONFLICTS))
+  const always = CONDITIONAL_SKILLS.map((c) => c.skillId).filter((id) => !MOVE_ONLY.has(id) && !health.has(id))
+  return [new Set([...always, 'peak-performance']), new Set([...always, 'heroics', 'resentment'])]
+})()
 
 /** All active effects for a set of skill levels. */
 export function activeEffects(levels: Map<string, number>, opts: EffectOptions = {}): SkillEffect[] {

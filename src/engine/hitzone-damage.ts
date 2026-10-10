@@ -6,7 +6,7 @@
  *   element = true element x element sharpness x element affinity factor x elemental HZV/100
  *
  * Affinity includes Weakness Exploit per row (weak spot = raw HZV >= 45 after tenderizing, plus its
- * wound bonus on wounded parts). Not modelled: rounding, quest/multiplayer defense rate, status,
+ * extra wound bonus on wounded weak spots). Not modelled: rounding, quest/multiplayer defense rate, status,
  * phials/shelling/ammo, per-move element modifiers. Raw and element stay separate so a later DPS
  * mode only needs combo totals: raw/MV x total MV + element x hits, over the combo's seconds.
  */
@@ -94,7 +94,8 @@ export function hitDamage(stats: WeaponStats, hitzone: Hitzone, wexLevel: number
   const rawHzv = opts.wounded ? tenderize(baseHzv) : baseHzv
   const weakSpot = rawHzv >= WEAK_SPOT_HZV
   const wex = skillEffect('weakness-exploit', wexLevel)
-  const bonus = (weakSpot ? (wex?.affinity ?? 0) : 0) + (opts.wounded ? (wex?.woundAffinity ?? 0) : 0)
+  // wound bonus is "extra" on top of the weak-spot bonus: weak spots only (Fextralife "Weakness Exploit")
+  const bonus = weakSpot ? (wex?.affinity ?? 0) + (opts.wounded ? (wex?.woundAffinity ?? 0) : 0) : 0
   const affinity = Math.max(-AFFINITY_CAP, Math.min(AFFINITY_CAP, stats.affinity + bonus))
 
   const gunner = stats.sharpnessIndex < 0
