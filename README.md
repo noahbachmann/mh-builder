@@ -31,4 +31,6 @@ Game data comes from [MHWorldData](https://github.com/gatheringhallstudios/MHWor
 
 ## Icons
 
-Weapon, armor, charm and decoration icons come from [MHW_Icons_SVG](https://github.com/OthelloRhin/MHW_Icons_SVG) by Thibault "Othello" Benoit (MIT, see `src/assets/icons/LICENSE-MHW_Icons_SVG`). `pnpm icons:import` regenerates them as Vue components in `src/assets/icons/`. Other icons (elements, stats, slots, ...) can be added as `src/assets/icons/<id>.webp` using the IDs listed in `CLAUDE.md`; until then the app shows a text badge.
+Weapon, armor, charm and decoration icons come from [MHW_Icons_SVG](https://github.com/OthelloRhin/MHW_Icons_SVG) by Thibault "Othello" Benoit (MIT, see `src/assets/icons/LICENSE-MHW_Icons_SVG`), stored as Vue components in `src/assets/icons/`.
+
+Item renders (weapon and armor pictures) and the element, status, stat and slot icons come from the [Monster Hunter World Wiki](https://monsterhunterworld.wiki.fextralife.com/) on Fextralife. `pnpm renders:import` downloads them as small webp files (`public/renders/`, `src/assets/icons/`). All game images © Capcom.

@@ -6,7 +6,9 @@ import { SLOT_LABEL } from '../../format'
 import { useBuildStore } from '../../stores/build'
 import { usePreviewStore } from '../../stores/preview'
 import { useUiStore } from '../../stores/ui'
+import { renderUrl } from '../../renders'
 import EquipmentCard, { type CardItem } from './EquipmentCard.vue'
+import ItemRender from './ItemRender.vue'
 
 const build = useBuildStore()
 const preview = usePreviewStore()
@@ -48,6 +50,13 @@ const candidate = computed(() => {
   return cardFor(c.slot, c.id)
 })
 const decos = computed(() => (slot.value === 'charm' || preview.candidate?.kind === 'deco' ? undefined : build.build.decorations[slot.value]))
+const renderOf = (c: CardItem | null | undefined) => {
+  if (!c || (c.kind !== 'weapon' && c.kind !== 'armor')) return null
+  const url = renderUrl(c.kind, c.item.id)
+  return url ? { url, name: c.item.name, rarity: c.item.rarity } : null
+}
+const equippedRender = computed(() => renderOf(equipped.value))
+const candidateRender = computed(() => renderOf(candidate.value))
 const heading = computed(() => (preview.candidate?.kind === 'deco' ? `${SLOT_LABEL[slot.value]} decoration` : SLOT_LABEL[slot.value]))
 </script>
 
@@ -58,6 +67,11 @@ const heading = computed(() => (preview.candidate?.kind === 'deco' ? `${SLOT_LAB
       <EquipmentCard title="Equipped" :card="equipped" :decorations="decos" />
       <EquipmentCard v-if="candidate !== undefined" title="Selected" :card="candidate" :compare="equipped" candidate />
     </div>
+    <!-- renders below the stats; the hovered item's render goes under the equipped one -->
+    <div v-if="equippedRender || candidateRender" class="renders">
+      <ItemRender v-if="equippedRender" v-bind="equippedRender" title="Equipped" />
+      <ItemRender v-if="candidateRender" v-bind="candidateRender" title="Selected" candidate />
+    </div>
   </div>
 </template>
 
@@ -67,6 +81,12 @@ const heading = computed(() => (preview.candidate?.kind === 'deco' ? `${SLOT_LAB
   grid-template-columns: 1fr;
   gap: 6px;
   padding: 8px;
+}
+.renders {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 8px 8px;
 }
 .cards.two {
   grid-template-columns: 1fr 1fr;

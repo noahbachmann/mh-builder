@@ -10,5 +10,5 @@ No Vue imports. Everything takes a `DataIndex` (`src/data/index.ts`) so tests ca
 - `efr.ts`: EFR/EFE with breakdowns. Gunners sharpness 1.0. Element crit only on positive affinity.
 - `evaluate.ts`: one call -> `BuildStats` (skills, weapon, efr, efe, defense). `build-diff.ts` diffs two `BuildStats` for hover compare.
 - `build-compare.ts`: `compareBuilds(entries)` -> metric rows (values, `best` indices, deltas vs first build; higher is always better; no `best` on full ties), skill + set bonus matrix. `evaluateForCompare` adds a `potential` evaluation with `includeConditional` (EFR with every situational skill active).
-- `tree-layout.ts`: band per root, col = depth, DFS rows. `edgePath` makes elbow SVG paths.
+- `tree-layout.ts`: band per root, DFS rows. Columns grouped by rarity (`rarityCols`): col = rarity group start + index among consecutive same-rarity ancestors. `edgePath` makes elbow SVG paths with the vertical right before the child (edges can skip columns).
 - `build-codec.ts`: `1.` + 7 `_`-joined items, base36 ids, `-` decos, `x` empty. Decoder drops invalid parts.

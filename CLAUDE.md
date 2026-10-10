@@ -152,41 +152,51 @@ The game shows the hunter model here. We use the space for information the game 
 ### Other screens and behavior
 
 - Decoration screen: pick a slot, filter decorations by slot size.
+- Slot list: the selected slot only changes by opening it (click, Enter, `1`–`7`), never by hover/focus. Rows keep the slot pip line's height when an item has no slots (no layout shift).
+- Loading a saved build asks "Load equipment?" (Yes/No dialog); the save icon overwrites a saved build with the current one, the trash icon deletes it.
 - Weapon tree screen:
   - Row of the 14 weapon type icons at the top.
-  - Each tree (Ore, Bone, monster trees, ...) is a horizontal band. Column = depth in the upgrade path; rows = depth-first order so siblings stack.
+  - Each tree (Ore, Bone, monster trees, ...) is a horizontal band. Columns are grouped by rarity (labeled header): a rarity is as wide as the longest same-rarity run on any path (e.g. Buster Sword I -> II, both R1, need 2 columns), so a column never mixes rarities. Rows = depth-first order so siblings stack. Left/right arrows stay on the row across column gaps.
+  - Nodes show element/status icons; with two (dual element, element + status) they overlap top-left / bottom-right.
   - Connector lines in one SVG layer behind the nodes, drawn from positions computed by `engine/tree-layout.ts`.
   - Hover/focus shows the stat diff; select equips.
   - Search box that jumps to and highlights a weapon.
   - "Special" tab for Kulve Taroth and Safi'jiiva weapons (later milestone).
 - Controls (mouse or keyboard, defined in `src/input/keyboard.ts`, shown with `?` in the app):
   - Arrows move the cursor, Enter selects or equips, Esc goes back.
-  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `D` opens decorations; `C` opens the build comparison.
+  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `8` opens decorations; `C` opens the build comparison.
   - `Q` / `E` switch the previous / next sidebar tab.
-  - `[` / `]` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen).
-  - Tab moves between panels; each panel keeps its own cursor (roving tabindex). `/` focuses search.
+  - `A` / `D` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen).
+  - Tab moves between panels; each panel keeps its own cursor (roving tabindex). `F` focuses search.
 - Sharpness bars are drawn with CSS, not images.
 
 ## Icons
 
 Code refers to icons only by ID through `src/icons.ts`; an ID without a file falls back to `ui/placeholder`, then to a CSS initials badge.
 
-**Imported set:** `pnpm icons:import` turns [MHW_Icons_SVG](https://github.com/OthelloRhin/MHW_Icons_SVG) (MIT, pinned commit in `scripts/icons/index.ts`) into one SVGO-optimized Vue component per icon in `src/assets/icons/<id>.vue` (generated, committed, do not edit). They are lazy-loaded through `import.meta.glob`, bundled into one `icons` chunk and rendered inline (no asset URLs). Covered:
+**SVG set:** [MHW_Icons_SVG](https://github.com/OthelloRhin/MHW_Icons_SVG) (MIT, commit `242f7e8`), imported once as one SVGO-optimized Vue component per icon in `src/assets/icons/<id>.vue` (committed; the one-off import script was removed, the set won't change). They are lazy-loaded through `import.meta.glob`, bundled into one `icons` chunk and rendered inline (no asset URLs). Covered:
 
 ```
 weapon/<weapon-type>/<rarity 1-12>     armor/<head|chest|arms|waist|legs>/<rarity 1-12>     charm/<rarity 1-12>
 deco/<skill icon color, kebab-case>/size-<1-4>    (colored by the jewel's first skill, like in-game)
 ```
 
-The deco color mapping (data color name -> source color number) was matched by eye; see `DECO_COLOR`.
+Deco colors were matched by eye (data color -> source `Color_NN`): white 00, red 01, green 02, blue 03, gold 04, violet 05, cyan 06, beige 07, yellow 09, gray 10, dark-beige 11, dark-green 13, dark-red 14, dark-blue 15, light-beige 24, orange 25, lime 26.
 
-**Not covered** (no source yet; still initials): add by hand as `src/assets/icons/<id>.webp` (imported as a URL). Do not create, draw or download other icons unless the owner asks.
+**Fextralife icons** (webp, 48px, written by `pnpm renders:import`, see "Item renders"):
 
 ```
 element/<fire|water|thunder|ice|dragon>   status/<poison|paralysis|sleep|blast>
-slot/size-1..4  slot/empty   rarity/1..12   stat/<attack|affinity|defense|elderseal>
-skill/default (optional skill/<skill-id>)   ui/placeholder
+stat/<attack|affinity|defense|elderseal>  slot/size-1..4
 ```
+
+**Hand-written:** `ui/save`, `ui/trash` (`.vue`, stroke = currentColor).
+
+**Not covered** (still initials): `slot/empty`, `rarity/1..12`, `skill/default` (optional `skill/<skill-id>`), `ui/placeholder`. Add by hand as `src/assets/icons/<id>.webp`. Do not create, draw or download other icons unless the owner asks.
+
+## Item renders
+
+`pnpm renders:import` (`scripts/renders/`) pulls the infobox picture of every weapon and armor piece from the Fextralife MHW wiki (MediaWiki API, cached in `.cache/fextralife/`, rate-limited: the wiki resets connections on bursts) and writes 160px webp files to `public/renders/` plus the id -> file map `src/data/renders.json`. Names that don't match a wiki title get spelling variants (α -> Alpha, `(MR)`, `+`), then the base item's render (same in-game model; `pnpm renders:import --offline` re-applies only this fallback to `renders.json`, no network). Armor uses the male render. Renders show in the Selected Equipment tab under the cards (hovered item's render below the equipped one); items without one show none. Unmatched names: `.cache/fextralife/missing.txt`. Images are Capcom's, via the wiki (fan-made, non-commercial).
 
 ## Testing
 
@@ -211,7 +221,7 @@ Package manager: pnpm. Keep this section in sync.
 - `test`: Vitest
 - `test:e2e`: Playwright (builds, then runs against `vite preview` on port 4199)
 - `data:import`: regenerate `src/data/` from the raw source
-- `icons:import`: regenerate `src/assets/icons/` from the pinned SVG icon set
+- `renders:import`: download item renders + element/status/stat/slot icons from the Fextralife wiki (`--offline`: base-item fallback only)
 
 CI (`.github/workflows/ci.yml`): every push and PRs to `main` run `build` (vue-tsc + vite) and `test`, then `test:e2e`; Playwright traces are uploaded on failure.
 
