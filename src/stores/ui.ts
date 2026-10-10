@@ -6,10 +6,15 @@ import type { DecoSlot, EquipSlot } from '../engine'
 export const SIDEBAR_TABS = ['stats', 'skills', 'equipment'] as const
 export type SidebarTab = (typeof SIDEBAR_TABS)[number]
 
+export const VIEWS = ['equipment', 'monsters'] as const
+export type View = (typeof VIEWS)[number]
+
 export type Screen = 'overview' | 'weapon' | 'armor' | 'charm' | 'decorations' | 'compare'
 
 /** Which screen/tab is open; selection state that is UI-only. */
 export const useUiStore = defineStore('ui', () => {
+  /** major page; mirrored to `?view=` by the monster store */
+  const view = ref<View>(new URLSearchParams(location.search).get('view') === 'monsters' ? 'monsters' : 'equipment')
   const tab = ref<SidebarTab>('stats')
   const screen = ref<Screen>('overview')
   /** slot shown in the Selected Equipment tab */
@@ -42,6 +47,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   return {
+    view,
     tab,
     screen,
     selectedSlot,
