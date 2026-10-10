@@ -224,8 +224,8 @@ Package manager: pnpm. Keep this section in sync.
 - `data:import`: regenerate `src/data/` from the raw source
 - `renders:import`: download item renders + element/status/stat/slot icons from the Fextralife wiki (`--offline`: base-item fallback only)
 
-CI (`.github/workflows/ci.yml`): every push and PRs to `main` run `build` (vue-tsc + vite) and `test`, then `test:e2e`; Playwright traces are uploaded on failure.
-A push to `main` that passes both deploys `dist/` to GitHub Pages (`https://noahbachmann.github.io/mh-builder/`; repo Settings → Pages → Source must be "GitHub Actions"). `main` runs queue instead of cancelling each other so a deploy is never cut off.
+CI (`.github/workflows/ci.yml`): pushes to other branches and PRs to `main` run `build` (vue-tsc + vite) and `test`, then `test:e2e`; Playwright traces are uploaded on failure.
+CD (`.github/workflows/cd.yml`): a push to `main` runs CI (as a reusable workflow) and a site build in parallel, then deploys `dist/` to GitHub Pages (`https://noahbachmann.github.io/mh-builder/`) only if both pass. Repo Settings → Pages → Source must be "GitHub Actions".
 
 ## Open decisions
 
