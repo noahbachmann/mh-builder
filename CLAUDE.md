@@ -164,6 +164,21 @@ Header tabs "Equipment" / "Monsters" (`S` toggles; URL `?view=monsters&m=<slug>`
 - Right tabs (`Q` / `E`): **Monster Info** (weakness stars incl. alternate forms; break/sever/flinch thresholds and extract colour, or parts from break/carve rewards where the source has no break data), **Damage Output**, **Loot** (LR / HR / MR sub-tabs via `A` / `D`, grouped by reward condition).
 - Damage Output: monster state chips (shared with the field guide), builds = current (can be switched off) + saved builds picked as chips (same selection as the comparison), sharpness override (capped at each weapon's top), motion value. Table: per part wounded / broken toggles and a weight (0-10, stepper buttons for keyboard use); one damage-per-hit column per build, best gold; weighted average + best part per build. Below the parts, "Skill conditions": every conditional skill of the shown builds (level per build column) with an on/off toggle; situational skills start off, Weakness Exploit starts on (applied per part, switching it off ignores it). Monster data (~700 kB) loads only when the page opens.
 
+### Responsive layout
+
+Usable from 340px. Breakpoints in `src/composables/useBreakpoint.ts` (`BREAKPOINTS`), same numbers in `App.vue` media queries:
+
+| Width | Left (slots / monster list) | Right sidebar |
+|---|---|---|
+| < 768 | drawer (header burger) | drawer (header info button, gold dot while a tapped preview is pinned) |
+| 768–1023 | drawer | always visible, 340px (monsters 380px) |
+| 1024–1399 | 200px (monsters 180px) | 340px (monsters 400px) |
+| ≥ 1400 | 220px (monsters 200px) | 400px (monsters 480px) |
+
+- Drawers overlay the center (`ui.drawer`); opening a slot, decorations, compare, a monster or loading a build closes the left one. Backdrop / Esc / the header button close them. Closed drawers are `inert` (focus grid skips them).
+- Center screens adapt with container queries on the center column (`@container center`), sidebars on their own width (`@container sidebar`: short tab labels).
+- Touch has no hover: the first tap on a candidate pins the preview (diff in the sidebar, row `.is-previewing`), a second tap on the same item equips. Tapping a skill name toggles the skill infobox. Keyboard hints (`.kbd`) and the Shortcuts button are hidden on `(hover: none)`.
+
 ### Other screens and behavior
 
 - Decoration screen: pick a slot, filter decorations by slot size.
@@ -227,6 +242,7 @@ monster/<monster slug>                     (list icons from the wiki's "Large Mo
   - open a shared build URL and get the same build
   - complete a full build using keyboard only
   - monsters page: field guide, info, loot ranks, damage output toggles, deep link, keyboard only
+  - responsive: phone drawers + tap-to-preview, no page overflow at 340px, tablet sidebar, lg columns
 
 Engine changes require unit tests. UI flow changes require updating the Playwright specs.
 

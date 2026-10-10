@@ -1,6 +1,6 @@
 # src/components — UI (display only, math lives in src/engine)
 
-- `App.vue` (in `src/`) is the 3-column grid: `left/` (SlotList, BuildManager), center screen chosen by `ui.screen`, `sidebar/`. `ui.view === 'monsters'` swaps all three for `monsters/`.
+- `App.vue` (in `src/`) is the 3-column grid: `left/` (SlotList, BuildManager), center screen chosen by `ui.screen`, `sidebar/`. `ui.view === 'monsters'` swaps all three for `monsters/`. Below 1024 / 768 the left / right column becomes a drawer (`.drawer-left` / `.drawer-right`, `ui.drawer`, `inert` when closed); columns are rendered once, only CSS changes (see root CLAUDE.md "Responsive layout").
 - `center/`: `WeaponTree` (type tabs, bands, SVG edges from `engine/tree-layout`, search), `ArmorPicker` (rank tabs), `CharmPicker`, `DecorationScreen` (slot column + deco list filtered by size), `BuildOverview` (default screen: equipment, EFR/EFE breakdown, skill descriptions), `CompareScreen` (current build + up to 3 saved builds side by side, from `stores/compare.ts`).
 - `left/SlotList`: `is-selected` = `ui.selectedSlot`, changed only by opening a slot (hover/focus must not change it: crossing rows on the way to the center swapped the Selected Equipment tab to an empty slot). Pip line keeps its height without slots.
 - `left/BuildManager`: saved builds (`stores/saved.ts`, localStorage codec strings), ⇄ toggles a build into the comparison (ids persisted under `mhw-builder.compare`). Load goes through `base/ConfirmDialog` ("Load equipment?"); save icon = overwrite, trash = delete.
@@ -11,8 +11,9 @@
 - Global `.chip` (style.css): toggle chip, `.is-active` gold.
 
 Patterns:
-- Every selectable element: `v-focus-cell="{ region, row, col }"` (`src/input/focus-grid.ts`). Regions: `slots`, `builds`, `center`, `center-tabs`, `deco-slots`, `sidebar-tabs`, `monsters`, `damage`, `sidebar-subtabs`. Number inputs swallow arrow keys (typing), so per-row controls are buttons (e.g. weight steppers).
-- Candidates use `v-on="candidate({...})"` from `composables/useCandidate.ts`: hover and focus both set `preview.candidate`; the sidebar reads `preview.stats` / `preview.diff`.
-- Skill names use `v-skill-info="{ skillId, level }"` (`stores/skill-info.ts`): mouse hover only, adds `.has-skill-info` (`cursor: help`) and `data-skill-info`; box is `pointer-events: none`, closes on scroll.
+- Every selectable element: `v-focus-cell="{ region, row, col }"` (`src/input/focus-grid.ts`). Regions: `slots`, `builds`, `center`, `center-tabs`, `deco-slots`, `sidebar-tabs`, `monsters`, `damage`, `sidebar-subtabs`. Cells inside `[inert]` (closed drawers) are skipped. Number inputs swallow arrow keys (typing), so per-row controls are buttons (e.g. weight steppers).
+- Candidates use `v-on="candidate({...}, pick)"` from `composables/useCandidate.ts` (no own `@click`): mouse hover and focus set `preview.candidate`, click / Enter calls `pick`; touch: first tap pins the preview (`preview.pinned`, row class `is-previewing` via `preview.isPinned`), second tap picks. The sidebar reads `preview.stats` / `preview.diff`.
+- Narrow layouts: center screens use `@container center (max-width: …)` (center width depends on the sidebars, not the viewport); sidebars `@container sidebar`. Wide tables get an `overflow-x: auto` wrapper.
+- Skill names use `v-skill-info="{ skillId, level }"` (`stores/skill-info.ts`): mouse hover, tap toggles on touch, adds `.has-skill-info` (`cursor: help`) and `data-skill-info`; box is `pointer-events: none`, closes on scroll.
 - Pickers focus the equipped item (or the first item) on mount, like the in-game cursor.
 - `data-testid`s are used by `tests/e2e`; keep them when refactoring.

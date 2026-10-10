@@ -88,6 +88,7 @@ export function installKeyboard(): () => void {
         t.blur()
         focusCenter()
       } else if (ui.showHelp) ui.showHelp = false
+      else if (ui.drawer) ui.closeDrawer()
       else if (ui.view === 'monsters') {
         if (!focusRegion('monsters')) return
       } else if (ui.screen !== 'overview') {
@@ -133,7 +134,7 @@ export function installKeyboard(): () => void {
       ui.openDecorations()
       focusCenter()
     } else if (key === 'c') {
-      ui.screen = 'compare'
+      ui.openCompare()
       focusCenter()
     } else if (key === 'q') ui.cycleTab(-1)
     else if (key === 'e') ui.cycleTab(1)

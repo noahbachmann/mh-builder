@@ -3,15 +3,23 @@ import { computed, ref } from 'vue'
 import { icons } from '../../icons'
 import { vFocusCell } from '../../input/focus-grid'
 import { useMonsterStore } from '../../stores/monster'
+import { useUiStore } from '../../stores/ui'
 import Icon from '../base/Icon.vue'
 
 const store = useMonsterStore()
+const ui = useUiStore()
 const query = ref('')
 
 const list = computed(() => {
   const q = query.value.trim().toLowerCase()
   return q ? store.monsters.filter((m) => m.name.toLowerCase().includes(q) || m.ecology.toLowerCase().includes(q)) : store.monsters
 })
+
+// picking from the drawer shows the guide
+function select(slug: string) {
+  store.select(slug)
+  ui.closeDrawer()
+}
 </script>
 
 <template>
@@ -31,7 +39,7 @@ const list = computed(() => {
         :class="{ 'is-selected': m.slug === store.slug }"
         :aria-current="m.slug === store.slug ? 'true' : undefined"
         data-testid="monster-item"
-        @click="store.select(m.slug)"
+        @click="select(m.slug)"
       >
         <Icon :id="icons.monster(m.slug)" :size="28" :label="m.name" />
         <span class="name">{{ m.name }}</span>

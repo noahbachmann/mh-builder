@@ -64,8 +64,11 @@ export const vFocusCell: Directive<HTMLElement, CellPos> = {
   },
 }
 
+/** connected and not inside a closed drawer (`inert`) */
+const usable = (el: HTMLElement) => el.isConnected && !el.closest('[inert]')
+
 function regionCells(region: string): [HTMLElement, CellPos][] {
-  return [...cells].filter(([el, p]) => p.region === region && el.isConnected)
+  return [...cells].filter(([el, p]) => p.region === region && usable(el))
 }
 
 /**
@@ -119,7 +122,7 @@ export function focusCell(el: HTMLElement) {
 /** Focus the remembered cell of a region (or its first cell). */
 export function focusRegion(region: string): boolean {
   const el = active.get(region)
-  const target = el?.isConnected ? el : regionCells(region)[0]?.[0]
+  const target = el && usable(el) ? el : regionCells(region)[0]?.[0]
   if (!target) return false
   focusCell(target)
   return true
