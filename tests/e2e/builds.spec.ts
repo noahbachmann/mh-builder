@@ -17,7 +17,13 @@ test('save a build, reload, load it again', async ({ page }) => {
   await expectSlot(page, 'weapon', 'None')
   await expect(page.getByTestId('saved-build')).toContainText('My test build')
 
+  // load asks first; No keeps the current (empty) build
   await page.getByTestId('load-build').click()
+  await expect(page.getByTestId('confirm-dialog')).toContainText('Load equipment?')
+  await page.getByTestId('confirm-no').click()
+  await expectSlot(page, 'weapon', 'None')
+  await page.getByTestId('load-build').click()
+  await page.getByTestId('confirm-yes').click()
   await expectSlot(page, 'weapon', 'Defender Great Sword II')
   await expectSlot(page, 'head', 'Rimeguard Helm α+')
   await expect(page.getByTestId('slot-decorations')).toContainText('1 / 2')
