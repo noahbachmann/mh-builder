@@ -38,7 +38,7 @@ onMounted(() =>
   <section class="panel picker" aria-label="Charms">
     <header class="panel-head">
       <Icon :id="icons.charm()" :size="18" /> Charm
-      <input v-model="query" class="search head-search" data-search placeholder="Search name or skill  ( / )" aria-label="Search charm" data-testid="charm-search" />
+      <input v-model="query" class="search head-search" data-search placeholder="Search name or skill  ( F )" aria-label="Search charm" data-testid="charm-search" />
     </header>
     <div ref="list" class="panel-body">
       <button
