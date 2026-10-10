@@ -3,11 +3,11 @@
  * focused button natively.
  *
  *   1-7       open Weapon / Head / Chest / Arms / Waist / Legs / Charm
- *   D         open Decorations
+ *   8         open Decorations
  *   C         compare saved builds
  *   Q / E     previous / next sidebar tab
- *   [ / ]     previous / next sub-tab of the open screen (weapon type, rank, equipment piece)
- *   /         focus search
+ *   A / D     previous / next sub-tab of the open screen (weapon type, rank, equipment piece)
+ *   F         focus search
  *   Esc       back (close screen -> slot list)
  *   ?         toggle shortcut help
  */
@@ -23,12 +23,12 @@ export const SHORTCUTS: [string, string][] = [
   ['Enter', 'Select / equip'],
   ['Esc', 'Back'],
   ['1 – 7', 'Weapon, Head, Chest, Arms, Waist, Legs, Charm'],
-  ['D', 'Decorations'],
+  ['8', 'Decorations'],
   ['C', 'Compare saved builds'],
   ['Q / E', 'Previous / next sidebar tab'],
-  ['[ / ]', 'Previous / next weapon type, rank or equipment piece'],
+  ['A / D', 'Previous / next weapon type, rank or equipment piece'],
   ['Tab', 'Next panel'],
-  ['/', 'Search'],
+  ['F', 'Search'],
   ['?', 'Show / hide this help'],
 ]
 
@@ -93,7 +93,7 @@ export function installKeyboard(): () => void {
     if (/^[1-7]$/.test(key)) {
       ui.openSlot(EQUIP_SLOTS[Number(key) - 1]!)
       focusCenter()
-    } else if (key === 'd') {
+    } else if (key === '8') {
       ui.openDecorations()
       focusCenter()
     } else if (key === 'c') {
@@ -101,9 +101,9 @@ export function installKeyboard(): () => void {
       focusCenter()
     } else if (key === 'q') ui.cycleTab(-1)
     else if (key === 'e') ui.cycleTab(1)
-    else if (key === '[') subTab(-1)
-    else if (key === ']') subTab(1)
-    else if (key === '/') {
+    else if (key === 'a') subTab(-1)
+    else if (key === 'd') subTab(1)
+    else if (key === 'f') {
       const search = document.querySelector<HTMLInputElement>('[data-search]')
       if (!search) return
       search.focus()

@@ -44,7 +44,7 @@ const sharpName = computed(() => {
       <div v-if="!build.build.weapon && !equipment.some((e) => e.item)" class="intro">
         <p>Pick a slot on the left to start. Hover or move the cursor over an item to compare it, and click or press Enter to equip it.</p>
         <p class="dim">
-          Shortcuts: <span class="kbd">1</span>–<span class="kbd">7</span> open slots, <span class="kbd">D</span> decorations,
+          Shortcuts: <span class="kbd">1</span>–<span class="kbd">7</span> open slots, <span class="kbd">8</span> decorations,
           <span class="kbd">Q</span>/<span class="kbd">E</span> sidebar tabs, <span class="kbd">?</span> all shortcuts.
         </p>
       </div>

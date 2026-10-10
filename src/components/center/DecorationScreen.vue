@@ -92,7 +92,7 @@ const rowOf = (slot: DecoSlot, index: number) => allSlots.value.findIndex((x) =>
   <section class="panel deco-screen" aria-label="Decorations">
     <header class="panel-head">
       <Icon :id="icons.deco(4)" :size="18" /> Decorations
-      <span class="dim hint">Pick a slot, then a decoration. <span class="kbd">[</span> <span class="kbd">]</span> switch equipment</span>
+      <span class="dim hint">Pick a slot, then a decoration. <span class="kbd">A</span> <span class="kbd">D</span> switch equipment</span>
     </header>
     <div class="cols">
       <div class="slots-col panel-body" aria-label="Equipment slots">
@@ -124,7 +124,7 @@ const rowOf = (slot: DecoSlot, index: number) => allSlots.value.findIndex((x) =>
       <div class="decos-col">
         <div class="filter">
           <span class="dim">Size ≤ <b class="num">{{ selectedSize }}</b></span>
-          <input v-model="query" class="search" data-search placeholder="Search decoration or skill  ( / )" aria-label="Search decoration" data-testid="deco-search" />
+          <input v-model="query" class="search" data-search placeholder="Search decoration or skill  ( F )" aria-label="Search decoration" data-testid="deco-search" />
         </div>
         <div class="panel-body">
           <template v-if="selected">

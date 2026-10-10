@@ -50,10 +50,10 @@ watch(slot, () => nextTick(focusInitial))
     <header class="panel-head">
       <Icon :id="icons.armor(slot)" :size="18" />
       {{ SLOT_LABEL[slot] }} Armor
-      <input v-model="query" class="search head-search" data-search placeholder="Search name or skill  ( / )" aria-label="Search armor" data-testid="armor-search" />
+      <input v-model="query" class="search head-search" data-search placeholder="Search name or skill  ( F )" aria-label="Search armor" data-testid="armor-search" />
     </header>
     <nav class="tabs" aria-label="Rank">
-      <span class="kbd">[</span>
+      <span class="kbd">A</span>
       <button
         v-for="(r, i) in RANKS"
         :key="r"
@@ -65,7 +65,7 @@ watch(slot, () => nextTick(focusInitial))
       >
         {{ r === 'all' ? 'All' : RANK_LABEL[r] }}
       </button>
-      <span class="kbd">]</span>
+      <span class="kbd">D</span>
       <span class="count faint num">{{ items.length }} pieces</span>
     </nav>
     <div ref="list" class="panel-body list">

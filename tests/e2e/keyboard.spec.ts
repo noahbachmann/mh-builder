@@ -32,15 +32,20 @@ test('complete a full build using keyboard only', async ({ page }) => {
   await page.keyboard.press('q')
   await expect(page.getByTestId('tab-stats')).toHaveClass(/is-active/)
 
-  // armor rank sub-tabs via [ ]
+  // armor rank sub-tabs via A / D
   await page.keyboard.press('2')
-  await page.keyboard.press(']')
+  await page.keyboard.press('d')
   await expect(page.getByTestId('rank-all')).toHaveClass(/is-active/)
-  await page.keyboard.press('[')
+  await page.keyboard.press('a')
   await expect(page.getByTestId('rank-MR')).toHaveClass(/is-active/)
 
-  // decorations: D, Enter on first slot, Down to first decoration, Enter
-  await page.keyboard.press('d')
+  // search: F focuses the search box, Esc leaves it
+  await page.keyboard.press('f')
+  await expect(page.getByTestId('armor-search')).toBeFocused()
+  await page.keyboard.press('Escape')
+
+  // decorations: 8, Enter on first slot, Down to first decoration, Enter
+  await page.keyboard.press('8')
   await expect(page.locator('[data-deco-slot]').first()).toBeFocused()
   await page.keyboard.press('Enter')
   await page.keyboard.press('ArrowDown')
