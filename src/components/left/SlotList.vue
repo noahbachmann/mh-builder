@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { db } from '../../data'
-import { EQUIP_SLOTS, type EquipSlot } from '../../engine'
+import { EQUIP_SLOTS } from '../../engine'
 import { icons } from '../../icons'
 import { SLOT_LABEL } from '../../format'
 import { vFocusCell } from '../../input/focus-grid'
@@ -38,10 +38,6 @@ const decoCount = computed(() => {
   }
   return { filled, total }
 })
-
-function select(slot: EquipSlot) {
-  ui.selectedSlot = slot
-}
 </script>
 
 <template>
@@ -53,18 +49,17 @@ function select(slot: EquipSlot) {
         :key="r.slot"
         v-focus-cell="{ region: 'slots', row: i, col: 0 }"
         class="row-btn slot-row"
-        :class="{ 'is-selected': ui.selectedSlot === r.slot, open: ui.screen !== 'overview' && ui.selectedSlot === r.slot && ui.screen !== 'decorations' }"
+        :class="{ 'is-selected': ui.selectedSlot === r.slot && ui.screen !== 'decorations' }"
         :data-testid="`slot-${r.slot}`"
         @click="ui.openSlot(r.slot)"
-        @mouseenter="select(r.slot)"
-        @focus="select(r.slot)"
       >
         <span class="kbd">{{ i + 1 }}</span>
         <Icon :id="r.icon" :size="28" :label="SLOT_LABEL[r.slot]" />
         <span class="info">
           <span class="slot-label">{{ SLOT_LABEL[r.slot] }}</span>
           <span class="name" :class="r.item ? `r${r.item.rarity}` : 'faint'" data-testid="slot-item">{{ r.item?.name ?? 'None' }}</span>
-          <SlotPips v-if="r.slots.length" :slots="r.slots" :decorations="r.decos" />
+          <!-- row keeps its height without slots: no layout shift between builds -->
+          <span class="pips-row" data-testid="slot-pips"><SlotPips v-if="r.slots.length" :slots="r.slots" :decorations="r.decos" /></span>
         </span>
       </button>
       <button
@@ -74,7 +69,7 @@ function select(slot: EquipSlot) {
         data-testid="slot-decorations"
         @click="ui.openDecorations()"
       >
-        <span class="kbd">D</span>
+        <span class="kbd">8</span>
         <Icon :id="icons.deco(4)" :size="28" label="Decorations" />
         <span class="info">
           <span class="slot-label">Decorations</span>
@@ -90,9 +85,10 @@ function select(slot: EquipSlot) {
   padding: 7px 10px;
   border-bottom: 1px solid rgba(59, 53, 38, 0.5);
 }
-.slot-row.open {
+/* selection only changes by opening a slot, not by hover/focus (hovering on the way to the center panel
+   would otherwise swap the Selected Equipment tab to another, possibly empty, slot) */
+.slot-row.is-selected {
   border-left-color: var(--gold);
-  background: var(--selected);
 }
 .info {
   display: flex;
@@ -110,6 +106,10 @@ function select(slot: EquipSlot) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.pips-row {
+  display: flex;
+  height: 16px;
 }
 .decos-row {
   margin-top: 4px;
