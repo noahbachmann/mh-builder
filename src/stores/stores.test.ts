@@ -56,6 +56,25 @@ describe('preview store', () => {
     p.clear(c)
     expect(p.candidate).toBeNull()
   })
+
+  it('a pinned (tapped) candidate survives blur / hover of others until replaced or cleared', () => {
+    const p = usePreviewStore()
+    const a = { kind: 'equip', slot: 'weapon', id: gs1.id } as const
+    const c = { kind: 'equip', slot: 'weapon', id: gs2.id } as const
+    p.show(c, { pinned: true })
+    p.clear(c)
+    expect(p.candidate).toEqual(c)
+    p.show(a)
+    expect(p.candidate).toEqual(c)
+    // focus of the same item keeps the pin
+    p.show(c)
+    expect(p.pinned).toBe(true)
+    p.show(a, { pinned: true })
+    expect(p.isCandidate(a)).toBe(true)
+    p.clear()
+    expect(p.candidate).toBeNull()
+    expect(p.pinned).toBe(false)
+  })
 })
 
 describe('saved store', () => {

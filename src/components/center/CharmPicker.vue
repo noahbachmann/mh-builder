@@ -4,12 +4,14 @@ import { db } from '../../data'
 import { icons } from '../../icons'
 import { focusCell, vFocusCell } from '../../input/focus-grid'
 import { useCandidate } from '../../composables/useCandidate'
+import { usePreviewStore } from '../../stores/preview'
 import { useBuildStore } from '../../stores/build'
 import Icon from '../base/Icon.vue'
 import SkillChips from './SkillChips.vue'
 
 const build = useBuildStore()
 const candidate = useCandidate()
+const preview = usePreviewStore()
 const query = ref('')
 const list = ref<HTMLElement | null>(null)
 
@@ -43,10 +45,10 @@ onMounted(() =>
     <div ref="list" class="panel-body">
       <button
         v-focus-cell="{ region: 'center', row: 0, col: 0 }"
-        v-on="candidate({ kind: 'equip', slot: 'charm', id: null })"
+        v-on="candidate({ kind: 'equip', slot: 'charm', id: null }, () => build.equip('charm', null))"
         class="row-btn item remove"
+        :class="{ 'is-previewing': preview.isPinned({ kind: 'equip', slot: 'charm', id: null }) }"
         data-testid="unequip"
-        @click="build.equip('charm', null)"
       >
         <span class="faint">— Remove charm</span>
       </button>
@@ -54,12 +56,11 @@ onMounted(() =>
         v-for="(c, i) in items"
         :key="c.id"
         v-focus-cell="{ region: 'center', row: i + 1, col: 0 }"
-        v-on="candidate({ kind: 'equip', slot: 'charm', id: c.id })"
+        v-on="candidate({ kind: 'equip', slot: 'charm', id: c.id }, () => build.equip('charm', c.id))"
         class="row-btn item"
-        :class="{ 'is-equipped': build.build.charm === c.id }"
+        :class="{ 'is-equipped': build.build.charm === c.id, 'is-previewing': preview.isPinned({ kind: 'equip', slot: 'charm', id: c.id }) }"
         :data-charm-id="c.id"
         :aria-label="c.name"
-        @click="build.equip('charm', c.id)"
       >
         <span class="rarity num" :class="`r${c.rarity}`">R{{ c.rarity }}</span>
         <span class="nm" :class="`r${c.rarity}`">{{ c.name }}</span>
@@ -95,5 +96,24 @@ onMounted(() =>
 }
 .item.remove {
   display: flex;
+}
+/* narrow center: search drops below the title */
+@container center (max-width: 559px) {
+  .panel-head {
+    flex-wrap: wrap;
+  }
+  .head-search {
+    width: 100%;
+    margin-left: 0;
+  }
+  /* skills under the name */
+  .item {
+    grid-template-columns: 34px minmax(0, 1fr) 24px;
+    row-gap: 2px;
+  }
+  .item .chips {
+    grid-row: 2;
+    grid-column: 2;
+  }
 }
 </style>

@@ -9,6 +9,8 @@ import SelectedEquipment from './SelectedEquipment.vue'
 const ui = useUiStore()
 const preview = usePreviewStore()
 const LABEL: Record<SidebarTab, string> = { stats: 'Overall Stats', skills: 'Overall Skills', equipment: 'Selected Equipment' }
+// narrow sidebar (phone drawer, tablet / lg column)
+const SHORT: Record<SidebarTab, string> = { stats: 'Stats', skills: 'Skills', equipment: 'Equipment' }
 </script>
 
 <template>
@@ -26,11 +28,13 @@ const LABEL: Record<SidebarTab, string> = { stats: 'Overall Stats', skills: 'Ove
         :data-testid="`tab-${t}`"
         @click="ui.tab = t"
       >
-        {{ LABEL[t] }}
+        <span class="l-long">{{ LABEL[t] }}</span><span class="l-short">{{ SHORT[t] }}</span>
       </button>
       <span class="kbd">E</span>
     </nav>
-    <div v-if="preview.candidate" class="preview-banner" data-testid="preview-banner">Previewing change: ▲ better ▼ worse</div>
+    <div v-if="preview.candidate" class="preview-banner" data-testid="preview-banner">
+      Previewing change: ▲ better ▼ worse<template v-if="preview.pinned"> · tap the item again to equip</template>
+    </div>
     <div class="panel-body" role="tabpanel">
       <OverallStats v-if="ui.tab === 'stats'" />
       <OverallSkills v-else-if="ui.tab === 'skills'" />
@@ -42,6 +46,18 @@ const LABEL: Record<SidebarTab, string> = { stats: 'Overall Stats', skills: 'Ove
 <style scoped>
 .sidebar {
   height: 100%;
+  container: sidebar / inline-size;
+}
+.l-short {
+  display: none;
+}
+@container sidebar (max-width: 419px) {
+  .l-long {
+    display: none;
+  }
+  .l-short {
+    display: inline;
+  }
 }
 .sidebar .tabs {
   align-items: center;

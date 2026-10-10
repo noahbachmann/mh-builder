@@ -43,8 +43,18 @@ watch(
 
 // anchor moves away on scroll: close instead of following it
 const onScroll = () => info.hide()
-onMounted(() => window.addEventListener('scroll', onScroll, { capture: true, passive: true }))
-onBeforeUnmount(() => window.removeEventListener('scroll', onScroll, { capture: true }))
+// touch: a tap anywhere but the anchor closes it (the anchor's own tap toggles)
+const onPointerDown = (e: PointerEvent) => {
+  if (e.pointerType !== 'mouse' && info.current && !info.current.anchor.contains(e.target as Node)) info.hide()
+}
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { capture: true, passive: true })
+  window.addEventListener('pointerdown', onPointerDown, { capture: true })
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll, { capture: true })
+  window.removeEventListener('pointerdown', onPointerDown, { capture: true })
+})
 </script>
 
 <template>
@@ -82,8 +92,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll, { capture: 
 .skill-infobox {
   position: fixed;
   z-index: 50;
-  width: 320px;
-  max-height: calc(100vh - 16px);
+  width: min(320px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
   overflow: hidden;
   pointer-events: none;
   /* opaque: panel-2 lets sidebar text through */

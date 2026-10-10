@@ -6,6 +6,7 @@ import { icons } from '../../icons'
 import { WEAPON_TYPE_LABEL, elementLabel, fmt } from '../../format'
 import { focusCell, vFocusCell } from '../../input/focus-grid'
 import { useCandidate } from '../../composables/useCandidate'
+import { usePreviewStore } from '../../stores/preview'
 import { useBuildStore } from '../../stores/build'
 import { useUiStore } from '../../stores/ui'
 import Icon from '../base/Icon.vue'
@@ -17,6 +18,7 @@ const NODE_W = 146
 const build = useBuildStore()
 const ui = useUiStore()
 const candidate = useCandidate()
+const preview = usePreviewStore()
 
 // special (Kulve/Safi) weapons wait for the "Special" tab milestone
 const treeWeapons = db.data.weapons.filter((w) => !w.special)
@@ -166,14 +168,13 @@ const elementTitle = (w: Weapon) => w.elements.map((e) => `${elementLabel(e.type
           v-for="n in nodes"
           :key="n.id"
           v-focus-cell="{ region: 'center', row: n.row, col: n.col }"
-          v-on="candidate({ kind: 'equip', slot: 'weapon', id: n.id })"
+          v-on="candidate({ kind: 'equip', slot: 'weapon', id: n.id }, () => equip(n.weapon))"
           class="node"
-          :class="{ equipped: equippedId === n.id, highlight: highlight === n.id }"
+          :class="{ equipped: equippedId === n.id, highlight: highlight === n.id, 'is-previewing': preview.isPinned({ kind: 'equip', slot: 'weapon', id: n.id }) }"
           :style="{ left: `${n.col * CELL_W}px`, top: `${n.row * CELL_H + 3}px`, width: `${NODE_W}px`, height: `${CELL_H - 6}px` }"
           :data-weapon-id="n.id"
           :aria-label="n.weapon.name"
           :title="n.weapon.name"
-          @click="equip(n.weapon)"
         >
           <span class="rar" :style="{ background: `var(--r${n.weapon.rarity})` }" />
           <span class="nm">{{ n.weapon.name }}</span>
@@ -211,6 +212,8 @@ const elementTitle = (w: Weapon) => w.elements.map((e) => `${elementLabel(e.type
   margin-left: auto;
   position: relative;
   width: 240px;
+  min-width: 0;
+  flex-shrink: 1;
   text-transform: none;
   letter-spacing: 0;
   font-weight: 400;
@@ -224,7 +227,7 @@ const elementTitle = (w: Weapon) => w.elements.map((e) => `${elementLabel(e.type
   z-index: 10;
   top: 100%;
   right: 0;
-  width: 360px;
+  width: min(360px, calc(100cqw - 16px));
   list-style: none;
   margin: 2px 0 0;
   padding: 2px 0;
@@ -287,6 +290,12 @@ const elementTitle = (w: Weapon) => w.elements.map((e) => `${elementLabel(e.type
 .node:focus {
   border-color: var(--gold);
   background: #2a2518;
+  z-index: 1;
+}
+.node.is-previewing {
+  border-color: var(--gold);
+  background: #2a2518;
+  box-shadow: 0 0 0 1px var(--gold);
   z-index: 1;
 }
 .node.equipped {
