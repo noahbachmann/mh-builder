@@ -29,10 +29,11 @@ Everything is unlocked: every weapon and armor piece is available, and armor is 
 - Keyboard navigation and shortcuts alongside mouse (no gamepad: it's a website).
 - Saved builds (localStorage) and shareable builds (build encoded in the URL).
 - Build comparison: current build + up to 3 saved builds side by side (stats, skills, EFR/EFE incl. "all conditions met" EFR), best values highlighted.
+- Monsters page (second major page, like the in-game Monster Field Guide): every large monster with field guide, weaknesses, breakable parts, loot per rank, and damage per hit on every hitzone for the current + up to 3 saved builds (see "Monsters page").
 
 ### Later milestones
-- Situational toggles (Agitator active, Weakness Exploit on weakspot, Peak Performance at full HP, etc.).
-- monster hitzones
+- Situational toggles on the Equipment page (the Monsters page already has per-condition toggles).
+- DPS: per-weapon combo presets (total MV, hits, seconds), editable; weapon mechanics (phials, shelling, ammo) separate. The damage table keeps raw-per-MV and element-per-hit apart for this.
 - crafting cost for armor and weapons
 
 ### Non-goals
@@ -66,10 +67,12 @@ src/
     weapon-stats.ts   true raw, element, sharpness, affinity
     efr.ts            EFR / EFE
     tree-layout.ts    weapon tree -> node grid positions + edges
+    hitzone-damage.ts damage per hit vs monster hitzones (states, broken, wounded, Weakness Exploit per part)
     build-codec.ts    build <-> URL string
     build-compare.ts  side-by-side comparison of several builds
-  stores/         Pinia stores
-  components/     slot list, right sidebar (tabs + compare window), center panel, item pickers, weapon tree, decoration screen
+  stores/         Pinia stores (monster.ts: Monsters page state, lazy monster data, ?view=/&m= URL)
+  components/     slot list, right sidebar (tabs + compare window), center panel, item pickers, weapon tree, decoration screen;
+                  monsters/ for the Monsters page
   input/          focus grid + keyboard shortcuts
   icons.ts        icon registry: icon ID -> lazy SVG component or webp URL
 tests/
@@ -149,6 +152,14 @@ The game shows the hunter model here. We use the space for information the game 
 - With no picker open, show a build overview: the full equipment list with slots and decorations, an EFR/EFE breakdown (true raw, sharpness multiplier, affinity, crit multiplier) and full descriptions of the active skills.
 - This content can grow over time, but it should not repeat what the sidebar already shows as its main content.
 
+### Monsters page
+
+Header tabs "Equipment" / "Monsters" (`M` toggles; URL `?view=monsters&m=<slug>`, `?b=` kept). Same 3 columns, wider sidebar:
+- Left: large monsters (icon + name, search).
+- Center: field guide: render, ecology, description, traps, physiology (hitzones of the chosen state; broken variants as extra rows; weak spots >= 45 gold), ailments it inflicts.
+- Right tabs (`Q` / `E`): **Monster Info** (weakness stars incl. alternate forms; break/sever/flinch thresholds and extract colour, or parts from break/carve rewards where the source has no break data), **Damage Output**, **Loot** (LR / HR / MR sub-tabs via `A` / `D`, grouped by reward condition).
+- Damage Output: monster state chips (shared with the field guide), builds = current + saved builds picked as chips (same selection as the comparison), per-condition skill toggles (only conditions some build has; Weakness Exploit is applied per part, not toggled), sharpness override (capped at each weapon's top), motion value. Table: per part wounded / broken toggles and a weight (0-10, stepper buttons for keyboard use); one damage-per-hit column per build, best gold; weighted average + best part per build. Monster data (~700 kB) loads only when the page opens.
+
 ### Other screens and behavior
 
 - Decoration screen: pick a slot, filter decorations by slot size.
@@ -164,7 +175,7 @@ The game shows the hunter model here. We use the space for information the game 
   - "Special" tab for Kulve Taroth and Safi'jiiva weapons (later milestone).
 - Controls (mouse or keyboard, defined in `src/input/keyboard.ts`, shown with `?` in the app):
   - Arrows move the cursor, Enter selects or equips, Esc goes back.
-  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `8` opens decorations; `C` opens the build comparison.
+  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `8` opens decorations; `C` opens the build comparison; `M` switches Equipment / Monsters (equipment keys switch back).
   - `Q` / `E` switch the previous / next sidebar tab.
   - `A` / `D` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen).
   - Tab moves between panels; each panel keeps its own cursor (roving tabindex). `F` focuses search.
@@ -202,7 +213,7 @@ monster/<monster slug>                     (list icons from the wiki's "Large Mo
 
 ## Testing
 
-- **Vitest** (`engine/` and stores): skill totals and caps, set bonuses, secret skills, EFR/EFE against known values, tree layout, build URL encode/decode round trip, data validation.
+- **Vitest** (`engine/` and stores): skill totals and caps, set bonuses, secret skills, EFR/EFE against known values, tree layout, build URL encode/decode round trip, data validation (incl. monsters), hitzone damage against hand-computed values.
 - **Playwright** (`tests/e2e/`): main user flows:
   - equip a weapon from the tree and see the stats update
   - equip armor and see skill totals update
@@ -211,6 +222,7 @@ monster/<monster slug>                     (list icons from the wiki's "Large Mo
   - save a build, reload, load it again
   - open a shared build URL and get the same build
   - complete a full build using keyboard only
+  - monsters page: field guide, info, loot ranks, damage output toggles, deep link, keyboard only
 
 Engine changes require unit tests. UI flow changes require updating the Playwright specs.
 
@@ -232,4 +244,5 @@ CD (`.github/workflows/cd.yml`): a push to `main` runs CI (as a reusable workflo
 
 - **Element cap**: no trusted reference for the Iceborne rule was found, so `elementCap()` in `engine/constants.ts` returns null (uncapped) and is marked UNVERIFIED. The UI says so.
 - **Order of operations**: raw = base true raw x multipliers + flat bonuses (community formula). This still needs to be confirmed against a known in-game value.
+- **Wound (tenderize)**: raw hitzone -> floor(0.75 x HZV + 25), elemental unchanged; derived from the wiki's tenderized Nergigante values (all match), not from an official formula. Which parts can be wounded isn't in the data: every part can be toggled. Weakness Exploit's wound bonus is applied on any wounded part (also below 45).
 - Weapon tree bands are unlabeled (alternating shading; `TreeBand.label` holds the root weapon name) because the source has no tree names ("Ore Tree", ...).
