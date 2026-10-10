@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { findNeighbor } from './focus-grid'
+import type { ObjectDirective } from 'vue'
+import { findNeighbor, focusRegion, vFocusCell, type CellPos } from './focus-grid'
 
 const c = (row: number, col: number) => ({ region: 'r', row, col })
 
@@ -29,5 +30,28 @@ describe('findNeighbor', () => {
   it('returns null at the edge', () => {
     expect(findNeighbor(c(0, 0), 'up', grid)).toBeNull()
     expect(findNeighbor(c(0, 0), 'left', grid)).toBeNull()
+  })
+})
+
+describe('focusRegion', () => {
+  const { mounted } = vFocusCell as ObjectDirective<HTMLElement, CellPos>
+  const mount = (el: HTMLElement, row: number) => mounted!(el, { value: { region: 'drawer', row, col: 0 } } as never, null as never, null as never)
+
+  it('skips cells inside a closed drawer (inert)', () => {
+    const drawer = document.createElement('div')
+    drawer.setAttribute('inert', '')
+    const hidden = document.createElement('button')
+    const shown = document.createElement('button')
+    // jsdom has no layout
+    shown.scrollIntoView = () => {}
+    drawer.append(hidden)
+    document.body.append(drawer, shown)
+    mount(hidden, 0)
+    expect(focusRegion('drawer')).toBe(false)
+    mount(shown, 1)
+    expect(focusRegion('drawer')).toBe(true)
+    expect(document.activeElement).toBe(shown)
+    drawer.remove()
+    shown.remove()
   })
 })

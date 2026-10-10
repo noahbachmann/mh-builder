@@ -7,6 +7,8 @@ import LootTable from './LootTable.vue'
 
 const store = useMonsterStore()
 const LABEL: Record<MonsterTab, string> = { info: 'Monster Info', damage: 'Damage Output', loot: 'Loot' }
+// narrow sidebar (phone drawer, tablet / lg column)
+const SHORT: Record<MonsterTab, string> = { info: 'Info', damage: 'Damage', loot: 'Loot' }
 </script>
 
 <template>
@@ -24,7 +26,7 @@ const LABEL: Record<MonsterTab, string> = { info: 'Monster Info', damage: 'Damag
         :data-testid="`mtab-${t}`"
         @click="store.tab = t"
       >
-        {{ LABEL[t] }}
+        <span class="l-long">{{ LABEL[t] }}</span><span class="l-short">{{ SHORT[t] }}</span>
       </button>
       <span class="kbd">E</span>
     </nav>
@@ -41,6 +43,18 @@ const LABEL: Record<MonsterTab, string> = { info: 'Monster Info', damage: 'Damag
 <style scoped>
 .sidebar {
   height: 100%;
+  container: sidebar / inline-size;
+}
+.l-short {
+  display: none;
+}
+@container sidebar (max-width: 419px) {
+  .l-long {
+    display: none;
+  }
+  .l-short {
+    display: inline;
+  }
 }
 .sidebar .tabs {
   align-items: center;

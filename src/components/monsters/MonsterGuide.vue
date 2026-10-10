@@ -69,27 +69,30 @@ const traps = computed(() =>
 
       <div class="section-title">Physiology</div>
       <ModeChips class="modes" region="center" />
-      <table class="hz" data-testid="physiology">
-        <thead>
-          <tr>
-            <th>Part</th>
-            <th v-for="k in RAW" :key="k" class="num">{{ capitalize(k) }}</th>
-            <th v-for="e in ELEMENTS" :key="e" class="num" :class="`el-${e}`">{{ elementLabel(e) }}</th>
-            <th class="num">Stun</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="r in rows" :key="`${r.part}-${r.broken}`" :class="{ broken: r.broken }">
-            <th>{{ r.broken ? 'broken' : r.part }}</th>
-            <template v-if="r.hz">
-              <td v-for="k in RAW" :key="k" class="num" :class="{ weak: r.hz[k] >= WEAK_SPOT_HZV }">{{ r.hz[k] }}</td>
-              <td v-for="e in ELEMENTS" :key="e" class="num" :class="r.hz[e] >= 20 ? `el-${e} strong` : 'dim'">{{ r.hz[e] }}</td>
-              <td class="num dim">{{ r.hz.ko }}</td>
-            </template>
-            <td v-else :colspan="RAW.length + ELEMENTS.length + 1" class="faint">only in another state</td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- 13 columns: scrolls sideways in a narrow center -->
+      <div class="hz-wrap">
+        <table class="hz" data-testid="physiology">
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th v-for="k in RAW" :key="k" class="num">{{ capitalize(k) }}</th>
+              <th v-for="e in ELEMENTS" :key="e" class="num" :class="`el-${e}`">{{ elementLabel(e) }}</th>
+              <th class="num">Stun</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in rows" :key="`${r.part}-${r.broken}`" :class="{ broken: r.broken }">
+              <th>{{ r.broken ? 'broken' : r.part }}</th>
+              <template v-if="r.hz">
+                <td v-for="k in RAW" :key="k" class="num" :class="{ weak: r.hz[k] >= WEAK_SPOT_HZV }">{{ r.hz[k] }}</td>
+                <td v-for="e in ELEMENTS" :key="e" class="num" :class="r.hz[e] >= 20 ? `el-${e} strong` : 'dim'">{{ r.hz[e] }}</td>
+                <td class="num dim">{{ r.hz.ko }}</td>
+              </template>
+              <td v-else :colspan="RAW.length + ELEMENTS.length + 1" class="faint">only in another state</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <p class="note faint">Gold = weak spot (≥ {{ WEAK_SPOT_HZV }}, Weakness Exploit applies). Colored = elemental hitzone ≥ 20.</p>
 
       <template v-if="m.ailments.length">
@@ -203,5 +206,18 @@ h2 {
 }
 .strong {
   font-weight: 600;
+}
+.hz-wrap {
+  overflow-x: auto;
+}
+@container center (max-width: 479px) {
+  .intro {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .render {
+    width: 120px;
+    height: 120px;
+  }
 }
 </style>

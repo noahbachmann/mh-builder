@@ -58,7 +58,10 @@ function closeLoad(load: boolean) {
   const p = pendingLoad.value
   pendingLoad.value = null
   if (!p) return
-  if (load) build.loadCode(p.code)
+  if (load) {
+    build.loadCode(p.code)
+    ui.closeDrawer()
+  }
   if (p.el?.isConnected) focusCell(p.el)
 }
 </script>
@@ -68,7 +71,7 @@ function closeLoad(load: boolean) {
     <header class="panel-head">
       Builds
       <span class="actions">
-        <button v-focus-cell="{ region: 'builds', row: 0, col: 0 }" class="btn" data-testid="open-compare" @click="ui.screen = 'compare'">Compare<template v-if="compare.selected.length"> ({{ compare.selected.length }})</template></button>
+        <button v-focus-cell="{ region: 'builds', row: 0, col: 0 }" class="btn" data-testid="open-compare" @click="ui.openCompare()">Compare<template v-if="compare.selected.length"> ({{ compare.selected.length }})</template></button>
         <button v-focus-cell="{ region: 'builds', row: 0, col: 1 }" class="btn" data-testid="share" @click="share">{{ copied ? 'Copied!' : 'Share link' }}</button>
         <button v-focus-cell="{ region: 'builds', row: 0, col: 2 }" class="btn" data-testid="reset" @click="build.reset()">Clear</button>
       </span>
