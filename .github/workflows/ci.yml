@@ -1,9 +1,6 @@
 name: CI
 
 on:
-  push:
-    # main runs CI through cd.yml
-    branches-ignore: [main]
   pull_request:
     branches: [main]
   workflow_call:
