@@ -68,7 +68,10 @@ function regionCells(region: string): [HTMLElement, CellPos][] {
   return [...cells].filter(([el, p]) => p.region === region && el.isConnected)
 }
 
-/** Best cell from `from` in `dir`: primary axis distance first, then cross-axis distance. */
+/**
+ * Best cell from `from` in `dir`: primary axis distance first, then cross-axis distance.
+ * Left/right prefer any cell on the same row (weapon tree rows are upgrade paths with column gaps).
+ */
 export function findNeighbor(from: CellPos, dir: Direction, candidates: CellPos[]): CellPos | null {
   let best: CellPos | null = null
   let bestScore = Infinity
@@ -82,7 +85,8 @@ export function findNeighbor(from: CellPos, dir: Direction, candidates: CellPos[
     else if (dir === 'left') [primary, cross] = [-dc, Math.abs(dr)]
     else [primary, cross] = [dc, Math.abs(dr)]
     if (primary <= 0) continue
-    const score = primary * 10_000 + cross
+    const sameRowBonus = (dir === 'left' || dir === 'right') && cross !== 0 ? 1e9 : 0
+    const score = sameRowBonus + primary * 10_000 + cross
     if (score < bestScore) {
       bestScore = score
       best = c

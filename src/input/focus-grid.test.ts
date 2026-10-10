@@ -18,6 +18,14 @@ describe('findNeighbor', () => {
     expect(findNeighbor(c(0, 2), 'right', grid)).toEqual(c(1, 3))
   })
 
+  it('left/right stay on the row across column gaps', () => {
+    const tree = [c(0, 0), c(0, 4), c(1, 1), c(5, 1)]
+    expect(findNeighbor(c(0, 0), 'right', tree)).toEqual(c(0, 4))
+    expect(findNeighbor(c(0, 4), 'left', tree)).toEqual(c(0, 0))
+    // no cell on the row: nearest column wins
+    expect(findNeighbor(c(1, 1), 'right', [...tree, c(2, 2)])).toEqual(c(2, 2))
+  })
+
   it('returns null at the edge', () => {
     expect(findNeighbor(c(0, 0), 'up', grid)).toBeNull()
     expect(findNeighbor(c(0, 0), 'left', grid)).toBeNull()

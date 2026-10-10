@@ -23,6 +23,13 @@ describe('generated data', () => {
     }
   })
 
+  it('rarity never drops along an upgrade path (tree columns are grouped by rarity)', () => {
+    for (const w of gameData.weapons) {
+      const parent = w.previousId === null ? undefined : db.weapon.get(w.previousId)
+      if (parent) expect(w.rarity, w.name).toBeGreaterThanOrEqual(parent.rarity)
+    }
+  })
+
   it('weapon parents share the weapon type', () => {
     const bad = gameData.weapons.filter((w) => w.previousId !== null && db.weapon.get(w.previousId)!.type !== w.type)
     expect(bad.map((w) => w.name)).toEqual([])
