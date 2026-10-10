@@ -88,7 +88,7 @@ watch(
   },
 )
 
-const mainElement = (w: Weapon) => w.elements[0]
+const elementTitle = (w: Weapon) => w.elements.map((e) => `${elementLabel(e.type)} ${e.hidden ? `(${e.value}, hidden)` : e.value}`).join(' · ')
 </script>
 
 <template>
@@ -100,7 +100,7 @@ const mainElement = (w: Weapon) => w.elements[0]
           v-model="query"
           class="search"
           data-search
-          placeholder="Search weapon  ( / )"
+          placeholder="Search weapon  ( F )"
           aria-label="Search weapon"
           data-testid="weapon-search"
           @keydown.enter.prevent="matches[0] && jumpTo(matches[0])"
@@ -117,7 +117,7 @@ const mainElement = (w: Weapon) => w.elements[0]
       </div>
     </header>
     <nav class="tabs type-tabs" aria-label="Weapon types">
-      <span class="kbd">[</span>
+      <span class="kbd">A</span>
       <button
         v-for="(t, i) in WEAPON_TYPES"
         :key="t"
@@ -131,10 +131,27 @@ const mainElement = (w: Weapon) => w.elements[0]
       >
         <Icon :id="icons.weapon(t)" :size="26" :label="WEAPON_TYPE_LABEL[t]" />
       </button>
-      <span class="kbd">]</span>
+      <span class="kbd">D</span>
     </nav>
     <div ref="scroller" class="panel-body tree-scroll">
+      <div class="rarity-head" :style="{ width: `${layout.cols * CELL_W}px` }">
+        <span
+          v-for="c in layout.rarityCols"
+          :key="c.rarity"
+          class="rarity-col"
+          :class="`r${c.rarity}`"
+          :style="{ left: `${c.col * CELL_W}px`, width: `${c.width * CELL_W - (CELL_W - NODE_W)}px` }"
+          >Rarity {{ c.rarity }}</span
+        >
+      </div>
       <div class="tree" :style="{ width: `${layout.cols * CELL_W}px`, height: `${layout.rows * CELL_H}px` }">
+        <div
+          v-for="(c, i) in layout.rarityCols"
+          :key="`col-${c.rarity}`"
+          class="rarity-band"
+          :class="{ alt: i % 2 }"
+          :style="{ left: `${c.col * CELL_W - (CELL_W - NODE_W) / 2}px`, width: `${c.width * CELL_W}px` }"
+        />
         <div
           v-for="(b, i) in layout.bands"
           :key="b.rootId"
@@ -161,13 +178,18 @@ const mainElement = (w: Weapon) => w.elements[0]
           <span class="nm">{{ n.weapon.name }}</span>
           <span class="meta num">
             {{ fmt(n.weapon.attack) }}
-            <span
-              v-if="mainElement(n.weapon)"
-              class="dot"
-              :class="`el-${mainElement(n.weapon)!.type}`"
-              :title="`${elementLabel(mainElement(n.weapon)!.type)}${mainElement(n.weapon)!.hidden ? ' (hidden)' : ''}`"
-              >{{ mainElement(n.weapon)!.hidden ? '◌' : '●' }}</span
-            >
+            <!-- 2 icons (dual element / element + status) overlap top-left / bottom-right in one box -->
+            <span v-if="n.weapon.elements.length" class="els" :class="{ two: n.weapon.elements.length > 1 }" :title="elementTitle(n.weapon)" data-testid="node-elements">
+              <Icon
+                v-for="e in n.weapon.elements.slice(0, 2)"
+                :key="e.type"
+                :id="icons.element(e.type)"
+                :size="n.weapon.elements.length > 1 ? 13 : 16"
+                :label="elementLabel(e.type)"
+                class="el"
+                :class="{ hidden: e.hidden }"
+              />
+            </span>
           </span>
         </button>
       </div>
@@ -289,6 +311,53 @@ const mainElement = (w: Weapon) => w.elements[0]
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.rarity-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 20px;
+  margin: 0 12px;
+  background: #10161e;
+}
+.rarity-col {
+  position: absolute;
+  top: 2px;
+  font-size: 11px;
+  text-align: center;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.85;
+}
+.rarity-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.rarity-band.alt {
+  background: rgba(255, 255, 255, 0.022);
+}
+.els {
+  position: relative;
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+}
+.els.two .el {
+  position: absolute;
+}
+.els.two .el:first-child {
+  top: 0;
+  left: 0;
+}
+.els.two .el:last-child {
+  right: 0;
+  bottom: 0;
+}
+.el.hidden {
+  opacity: 0.45;
+  filter: grayscale(0.6);
 }
 .meta {
   color: var(--text-dim);

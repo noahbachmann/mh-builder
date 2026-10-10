@@ -26,3 +26,13 @@ test('weapon search jumps to and highlights a weapon in another type', async ({ 
   await expect(node).toHaveClass(/highlight/)
   await expect(page.getByTestId('type-long-sword')).toHaveClass(/is-active/)
 })
+
+test('tree columns are grouped by rarity and nodes show element icons', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('slot-weapon').click()
+  const left = async (name: string) => (await page.getByRole('button', { name, exact: true }).boundingBox())!.x
+  // Buster Sword III (R2) and Defender Great Sword II (R3) sit in different rarity columns
+  expect(await left('Defender Great Sword II')).toBeGreaterThan(await left('Buster Sword III'))
+  await expect(page.locator('.rarity-col').first()).toHaveText('Rarity 1')
+  await expect(page.getByRole('button', { name: 'Defender Great Sword I', exact: true }).getByTestId('node-elements').locator('[data-icon]')).toHaveAttribute('data-icon', 'status/blast')
+})

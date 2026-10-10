@@ -16,7 +16,7 @@ describe('layoutTrees', () => {
     return [n.col, n.row]
   }
 
-  it('column = depth, first child shares the parent row, siblings stack depth-first', () => {
+  it('single rarity: column = depth, first child shares the parent row, siblings stack depth-first', () => {
     expect(pos(1)).toEqual([0, 0])
     expect(pos(2)).toEqual([1, 0])
     expect(pos(3)).toEqual([2, 0])
@@ -48,10 +48,32 @@ describe('layoutTrees', () => {
       for (const e of l.edges) {
         const a = l.byId.get(e.from)!
         const b = l.byId.get(e.to)!
-        expect(b.col).toBe(a.col + 1)
+        expect(b.col).toBeGreaterThan(a.col)
         expect(b.row).toBeGreaterThanOrEqual(a.row)
       }
+      // a column never mixes rarities
+      const rarityAt = new Map<number, number>()
+      for (const n of l.nodes) {
+        const r = db.weapon.get(n.id)!.rarity
+        expect(rarityAt.get(n.col) ?? r, `${type} col ${n.col}`).toBe(r)
+        rarityAt.set(n.col, r)
+      }
     }
+  })
+
+  it('groups columns by rarity, wide where a path repeats a rarity', () => {
+    //  R1 a - R1 b - R3 c
+    //       \- R2 d - R3 e
+    const r = (id: number, previousId: number | null, rarity: number) => weapon({ id, previousId, rarity })
+    const l = layoutTrees([r(1, null, 1), r(2, 1, 1), r(3, 2, 3), r(4, 1, 2), r(5, 4, 3)])
+    expect(l.rarityCols).toEqual([
+      { rarity: 1, col: 0, width: 2 },
+      { rarity: 2, col: 2, width: 1 },
+      { rarity: 3, col: 3, width: 1 },
+    ])
+    const col = (id: number) => l.byId.get(id)!.col
+    expect([col(1), col(2), col(4), col(3), col(5)]).toEqual([0, 1, 2, 3, 3])
+    expect(l.cols).toBe(4)
   })
 
   it('edgePath: straight line on same row, elbow otherwise', () => {
