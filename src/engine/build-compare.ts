@@ -3,11 +3,12 @@ import type { ElementOrStatus, SetBonus, Skill } from '../data/types'
 import type { Build } from './build'
 import { diffNumber, type NumberDiff } from './build-diff'
 import { evaluateBuild, type BuildStats } from './evaluate'
+import { POTENTIAL_CONDITIONS } from './skill-effects'
 
 /** One build in a comparison: plain stats + stats with every conditional skill active. */
 export interface CompareEntry {
   stats: BuildStats
-  /** all conditions met (Agitator active, WEX on weakspot, ...) */
+  /** all conditions met (Agitator active, WEX on weak spot, ...): best of `POTENTIAL_CONDITIONS` */
   potential: BuildStats
 }
 
@@ -59,7 +60,9 @@ const RESISTANCES = ['fire', 'water', 'thunder', 'ice', 'dragon'] as const
 const EPS = 1e-9
 
 export function evaluateForCompare(build: Build, db: DataIndex): CompareEntry {
-  return { stats: evaluateBuild(build, db), potential: evaluateBuild(build, db, { includeConditional: true }) }
+  const [full, low] = POTENTIAL_CONDITIONS.map((conditions) => evaluateBuild(build, db, { conditions }))
+  const potential = (low!.efr?.efr ?? 0) > (full!.efr?.efr ?? 0) ? low! : full!
+  return { stats: evaluateBuild(build, db), potential }
 }
 
 /** Indices of the highest values; empty on a full tie or with fewer than two values. */

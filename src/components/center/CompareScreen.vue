@@ -35,7 +35,7 @@ const decoNames = (b: Build) =>
 
 function label(key: MetricKey): { text: string; el?: ElementOrStatus; hint?: string } {
   if (key === 'efr') return { text: 'EFR' }
-  if (key === 'efr-potential') return { text: 'EFR, all conditions', hint: 'Every situational skill active (Agitator, Weakness Exploit, ...)' }
+  if (key === 'efr-potential') return { text: 'EFR, all conditions', hint: 'Situational skills active (Agitator, Weakness Exploit on a weak spot, ...); full-health or low-health skills, whichever is higher; not Critical Draw (draw attacks only)' }
   if (key === 'true-raw') return { text: 'True raw' }
   if (key === 'attack') return { text: 'Attack' }
   if (key === 'affinity') return { text: 'Affinity' }
@@ -155,7 +155,7 @@ function load(b: Build) {
         </tbody>
       </table>
       <p v-if="cols.length >= 2" class="note faint">
-        Gold = best value. Deltas are against the current build. "EFR, all conditions" counts every situational skill as active.
+        Gold = best value. Deltas are against the current build. "EFR, all conditions" counts situational skills as active (Peak Performance or Heroics / Resentment, whichever is higher; not Critical Draw).
       </p>
     </div>
   </section>

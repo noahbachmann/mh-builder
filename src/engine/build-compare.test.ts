@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { db } from '../data'
 import { emptyBuild, equip, setDecoration } from './build'
 import { compareBuilds, evaluateForCompare } from './build-compare'
+import { POTENTIAL_CONDITIONS } from './skill-effects'
 
 const weaponId = (name: string) => db.data.weapons.find((w) => w.name === name)!.id
 const armorId = (name: string) => db.data.armor.find((a) => a.name === name)!.id
@@ -45,6 +46,16 @@ describe('compareBuilds', () => {
     expect(base[1]).toBeCloseTo(base[0]!) // Agitator is conditional
     expect(pot[0]!).toBeGreaterThan(base[0]!) // helm's Coalescence is too
     expect(pot[1]!).toBeGreaterThan(pot[0]!)
+  })
+
+  it('potential never combines full-health and low-health skills, nor draw-only Critical Draw', () => {
+    const flat = POTENTIAL_CONDITIONS.map((c) => [...c])
+    expect(flat[0]).toContain('peak-performance')
+    expect(flat[0]).not.toContain('heroics')
+    expect(flat[1]).toEqual(expect.arrayContaining(['heroics', 'resentment']))
+    expect(flat[1]).not.toContain('peak-performance')
+    expect(flat.flat()).not.toContain('critical-draw')
+    expect(flat.every((c) => c.includes('agitator') && c.includes('weakness-exploit'))).toBe(true)
   })
 
   it('unions skills across builds with 0 for missing', () => {

@@ -29,9 +29,9 @@ export const ELEMENT_BLOAT = 10
 export const SHARPNESS_COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'white', 'purple'] as const
 export type SharpnessColor = (typeof SHARPNESS_COLORS)[number]
 
-/** Index = SHARPNESS_COLORS index. */
+/** Index = SHARPNESS_COLORS index. Source: Fextralife "Sharpness" table (Iceborne; white element 1.15, purple 1.25). */
 export const RAW_SHARPNESS = [0.5, 0.75, 1.0, 1.05, 1.2, 1.32, 1.39] as const
-export const ELEMENT_SHARPNESS = [0.25, 0.5, 0.75, 1.0, 1.0625, 1.15, 1.27] as const
+export const ELEMENT_SHARPNESS = [0.25, 0.5, 0.75, 1.0, 1.0625, 1.15, 1.25] as const
 
 export const BASE_CRIT_MULTIPLIER = 1.25
 /** Critical Boost levels 1..3 (skill text: "increases damage dealt by critical hits to 30/35/40%") */

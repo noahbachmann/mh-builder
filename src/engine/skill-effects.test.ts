@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '../data'
-import { CONDITIONAL_SKILLS, SKILL_EFFECTS, WEAK_SPOT_CONDITION, activeEffects, skillEffect, type SkillEffect } from './skill-effects'
+import { CONDITIONAL_SKILLS, CONDITION_CONFLICTS, UNMODELLED_DAMAGE_SKILLS, SKILL_EFFECTS, WEAK_SPOT_CONDITION, activeEffects, skillEffect, type SkillEffect } from './skill-effects'
 
 const pct = (m: number | undefined) => (m === undefined ? [] : [Math.round((m - 1) * 100)])
 
@@ -90,6 +90,22 @@ describe('skill effects table', () => {
     ])
     expect(activeEffects(levels, { conditions: new Set(['agitator']) })).toEqual([skillEffect('agitator', 1)])
     expect(activeEffects(levels, { conditions: new Set() })).toEqual([])
+  })
+
+  it('unmodelled damage skills exist in the data and are not in the table', () => {
+    for (const id of Object.keys(UNMODELLED_DAMAGE_SKILLS)) {
+      expect(db.skill.has(id), id).toBe(true)
+      expect(SKILL_EFFECTS[id], id).toBeUndefined()
+    }
+  })
+
+  it('Affinity Sliding is a +30% affinity condition', () => {
+    expect(skillEffect('affinity-sliding', 1)).toEqual({ affinity: 30, conditional: 'After sliding' })
+  })
+
+  it('health conditions conflict both ways', () => {
+    for (const [id, others] of Object.entries(CONDITION_CONFLICTS))
+      for (const o of others) expect(CONDITION_CONFLICTS[o], `${o} <-> ${id}`).toContain(id)
   })
 
   it('lists every conditional skill with its condition', () => {

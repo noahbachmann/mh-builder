@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { db } from '../../data'
-import { CONDITIONAL_SKILLS, SHARPNESS_COLORS, skillLevels, type DamageRow, type HitDamage } from '../../engine'
-import { capitalize, fmt } from '../../format'
+import type { WeaponType } from '../../data/types'
+import {
+  CONDITIONAL_SKILLS,
+  CONDITION_CONFLICTS,
+  SHARPNESS_COLORS,
+  UNMODELLED_DAMAGE_SKILLS,
+  skillLevels,
+  type DamageRow,
+  type HitDamage,
+} from '../../engine'
+import { WEAPON_TYPE_LABEL, capitalize, fmt } from '../../format'
 import { vFocusCell } from '../../input/focus-grid'
 import { useCompareStore } from '../../stores/compare'
 import { MAX_WEIGHT, useMonsterStore } from '../../stores/monster'
@@ -24,8 +33,41 @@ const skills = computed(() => {
     ...c,
     name: db.skill.get(c.skillId)?.name ?? c.skillId,
     levels: levels.map((l) => l.get(c.skillId) ?? 0),
-    note: c.skillId === 'weakness-exploit' ? 'per part: hitzone ≥ 45, + wound bonus' : c.label,
+    note:
+      c.skillId === 'weakness-exploit'
+        ? 'per part: hitzone ≥ 45 (+ extra on wounded)'
+        : CONDITION_CONFLICTS[c.skillId]
+          ? `${c.label} (excludes ${CONDITION_CONFLICTS[c.skillId]!.map((id) => db.skill.get(id)?.name ?? id).join(', ')})`
+          : c.label,
   }))
+})
+
+/** damage skills of the shown builds the calculation leaves out */
+const unmodelled = computed(() => {
+  const levels = store.builds.map((b) => skillLevels(b.stats.skills))
+  return Object.entries(UNMODELLED_DAMAGE_SKILLS)
+    .filter(([id]) => levels.some((l) => l.has(id)))
+    .map(([id, note]) => ({ id, note, name: db.skill.get(id)?.name ?? id, levels: levels.map((l) => l.get(id) ?? 0) }))
+})
+
+/** what the per-hit number leaves out for each weapon type in the shown builds */
+const WEAPON_NOTES: Partial<Record<WeaponType, string>> = {
+  'great-sword': 'charge level multipliers not included',
+  'long-sword': 'Spirit Gauge boosts not included',
+  'dual-blades': 'Demon Mode modifiers not included; single hits have low motion values',
+  'hunting-horn': 'song buffs not included',
+  lance: 'uses the sever hitzone (some sources say Lance uses the better of sever / blunt, unverified)',
+  gunlance: 'shelling and Wyvern\'s Fire not included',
+  'switch-axe': 'phial boosts in sword mode not included',
+  'charge-blade': 'phial explosions and shield charge not included',
+  'insect-glaive': 'extract buffs and kinsect damage not included',
+  'light-bowgun': "weapon raw only: ammo motion values, ammo element and critical distance not included",
+  'heavy-bowgun': "weapon raw only: ammo motion values, ammo element and critical distance not included",
+  bow: 'arrow motion values, charge levels, coatings and critical distance not included',
+}
+const weaponNotes = computed(() => {
+  const types = [...new Set(store.builds.flatMap((b) => (b.stats.weapon ? [b.stats.weapon.weapon.type] : [])))]
+  return types.flatMap((t) => (WEAPON_NOTES[t] ? [{ type: t, label: WEAPON_TYPE_LABEL[t], note: WEAPON_NOTES[t]! }] : []))
 })
 
 const rows = computed(() => store.rows)
@@ -239,12 +281,30 @@ function onMv(e: Event) {
           <td v-for="(lv, j) in c.levels" :key="j" class="num" :class="{ faint: !lv }">{{ lv ? `Lv ${lv}` : '—' }}</td>
         </tr>
       </tbody>
+      <tbody v-if="unmodelled.length" data-testid="damage-unmodelled">
+        <tr class="section">
+          <th :colspan="4 + store.builds.length">Not included in the calculation</th>
+        </tr>
+        <tr v-for="u in unmodelled" :key="u.id" class="unmodelled" data-testid="damage-unmodelled-skill">
+          <th>
+            <span v-skill-info="{ skillId: u.id, level: u.levels.find((l) => l > 0) ?? 0 }">{{ u.name }}</span>
+          </th>
+          <td />
+          <td colspan="2" class="cond dim">{{ u.note }}</td>
+          <td v-for="(lv, j) in u.levels" :key="j" class="num faint">{{ lv ? `Lv ${lv}` : '—' }}</td>
+        </tr>
+      </tbody>
     </table>
+
+    <ul v-if="weaponNotes.length" class="weapon-notes" data-testid="damage-weapon-notes">
+      <li v-for="w in weaponNotes" :key="w.type"><span class="dim">{{ w.label }}:</span> {{ w.note }}</li>
+    </ul>
 
     <p class="note faint">
       Damage per hit at the chosen motion value: raw × sharpness × affinity × MV × hitzone, plus element. Weakness Exploit applies per part
-      (raw hitzone ≥ 45, plus its bonus on wounded parts). Wounding sets the raw hitzone to 0.75 × hitzone + 25. Not included: monster
-      defense rate, rounding, statuses, phials, shelling, ammo. Not DPS: no attack timings in the data.
+      (raw hitzone ≥ 45 after wounding, plus its extra bonus when such a part is wounded). Wounding sets the raw hitzone to 0.75 × hitzone + 25. Not included: monster
+      defense rate, rounding, statuses, weapon-specific mechanics. Elemental hitzones stay the same when wounded. Not DPS: no attack
+      timings in the data.
     </p>
   </div>
 </template>
@@ -399,6 +459,15 @@ tr.gone td {
 .cond {
   font-size: 11px;
   white-space: nowrap;
+}
+.unmodelled th {
+  color: var(--text-dim);
+}
+.weapon-notes {
+  margin: 8px 12px 0;
+  padding: 0 0 0 16px;
+  font-size: 11px;
+  color: var(--warn);
 }
 .note {
   font-size: 11px;

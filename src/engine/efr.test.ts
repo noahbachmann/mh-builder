@@ -41,21 +41,21 @@ describe('EFE', () => {
   const fire = weapon({ elements: [{ type: 'fire', value: 300, hidden: false }], affinity: 40 })
 
   it('no Critical Element: affinity ignored', () => {
-    // 30 x 1.27 = 38.1
+    // 30 x 1.25 = 37.5
     const [e] = computeEfe(computeWeaponStats(fire, []))
-    expect(e!.efe).toBeCloseTo(38.1)
+    expect(e!.efe).toBeCloseTo(37.5)
   })
 
   it('Critical Element on GS (1.5)', () => {
-    // 30 x 1.27 x (1 + 0.4 x 0.5) = 45.72
+    // 30 x 1.25 x (1 + 0.4 x 0.5) = 45
     const [e] = computeEfe(computeWeaponStats(fire, [skillEffect('critical-element', 1)!]))
-    expect(e!.efe).toBeCloseTo(45.72)
+    expect(e!.efe).toBeCloseTo(45)
   })
 
   it('negative affinity does not reduce element', () => {
     const neg = { ...fire, affinity: -40 }
     const [e] = computeEfe(computeWeaponStats(neg, [skillEffect('critical-element', 1)!]))
-    expect(e!.efe).toBeCloseTo(38.1)
+    expect(e!.efe).toBeCloseTo(37.5)
   })
 
   it('element sharpness on blue is 1.0625; statuses and inactive hidden element excluded', () => {
