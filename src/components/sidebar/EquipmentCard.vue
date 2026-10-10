@@ -7,6 +7,7 @@ import { WEAPON_TYPE_LABEL, capitalize, elementLabel, fmt } from '../../format'
 import Icon from '../base/Icon.vue'
 import SharpnessBar from '../base/SharpnessBar.vue'
 import SlotPips from '../base/SlotPips.vue'
+import { vSkillInfo } from '../../stores/skill-info'
 
 export type CardItem =
   | { kind: 'weapon'; item: Weapon }
@@ -170,7 +171,7 @@ const baseBar = computed(() => {
 
       <div class="label">Skills</div>
       <ul class="skills">
-        <li v-for="s in skills" :key="s.skillId" :class="skillClass(s)">
+        <li v-for="s in skills" :key="s.skillId" v-skill-info="{ skillId: s.skillId, level: s.level }" :class="skillClass(s)">
           {{ db.skill.get(s.skillId)?.name }} <b class="num">Lv {{ s.level }}</b>
         </li>
         <li v-if="card.kind === 'weapon' && card.item.setBonusId" class="faint">Set piece: {{ db.setBonus.get(card.item.setBonusId)?.name }}</li>

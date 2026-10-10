@@ -168,6 +168,7 @@ The game shows the hunter model here. We use the space for information the game 
   - `Q` / `E` switch the previous / next sidebar tab.
   - `A` / `D` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen).
   - Tab moves between panels; each panel keeps its own cursor (roving tabindex). `F` focuses search.
+- Skill infobox: hovering any skill name (sidebar, equipment cards, picker chips, overview, comparison) shows the skill's description and every level (hovered level highlighted, secret levels marked with the secret skill and set bonuses that unlock them). Cursor is `help` over skills.
 - Sharpness bars are drawn with CSS, not images.
 
 ## Icons

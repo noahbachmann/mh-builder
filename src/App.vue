@@ -13,6 +13,7 @@ import DecorationScreen from './components/center/DecorationScreen.vue'
 import CompareScreen from './components/center/CompareScreen.vue'
 import BuildOverview from './components/center/BuildOverview.vue'
 import HelpOverlay from './components/HelpOverlay.vue'
+import SkillInfobox from './components/base/SkillInfobox.vue'
 
 const ui = useUiStore()
 const preview = usePreviewStore()
@@ -57,6 +58,7 @@ onBeforeUnmount(() => uninstall?.())
       <a href="https://monsterhunterworld.wiki.fextralife.com/" target="_blank" rel="noopener">MHW Wiki (Fextralife)</a>. Game images © Capcom.
     </footer>
     <HelpOverlay />
+    <SkillInfobox />
   </div>
 </template>
 

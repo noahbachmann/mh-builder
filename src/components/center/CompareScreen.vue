@@ -7,6 +7,7 @@ import { vFocusCell } from '../../input/focus-grid'
 import { useBuildStore } from '../../stores/build'
 import { useCompareStore } from '../../stores/compare'
 import { useUiStore } from '../../stores/ui'
+import { vSkillInfo } from '../../stores/skill-info'
 import type { ElementOrStatus } from '../../data/types'
 
 const compare = useCompareStore()
@@ -136,7 +137,7 @@ function load(b: Build) {
         <tbody v-if="cmp.skills.length">
           <tr class="section"><th :colspan="cols.length + 1">Skills</th></tr>
           <tr v-for="s in cmp.skills" :key="s.skill.id" :data-testid="`compare-skill-${s.skill.id}`">
-            <th>{{ s.skill.name }}</th>
+            <th><span v-skill-info="{ skillId: s.skill.id, level: s.levels[0] ?? 0 }">{{ s.skill.name }}</span></th>
             <td v-for="(lv, i) in s.levels" :key="i" class="num" :class="{ faint: !lv, maxed: lv && lv >= s.caps[i]! }">
               {{ lv ? `${lv} / ${s.caps[i]}` : '—' }}
             </td>
