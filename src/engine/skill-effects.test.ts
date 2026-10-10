@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '../data'
-import { SKILL_EFFECTS, activeEffects, skillEffect, type SkillEffect } from './skill-effects'
+import { CONDITIONS, SKILL_EFFECTS, WEAK_SPOT_CONDITION, activeEffects, skillEffect, type SkillEffect } from './skill-effects'
 
 const pct = (m: number | undefined) => (m === undefined ? [] : [Math.round((m - 1) * 100)])
 
@@ -9,6 +9,7 @@ function effectNumbers(e: SkillEffect): number[] {
   return [
     e.rawFlat,
     e.affinity,
+    e.woundAffinity,
     ...pct(e.rawMul),
     ...pct(e.critMultiplier),
     e.elementFlat,
@@ -25,7 +26,6 @@ function effectNumbers(e: SkillEffect): number[] {
 
 // numbers in the text that describe parts we intentionally do not model
 const IGNORED: Record<string, number[]> = {
-  'weakness-exploit': [5, 15, 20], // extra affinity on wounded parts
   'latent-power': [30, 50], // stamina depletion
   'free-elem-ammo-up': [],
 }
@@ -81,5 +81,19 @@ describe('skill effects table', () => {
     ])
     expect(activeEffects(levels)).toHaveLength(1)
     expect(activeEffects(levels, { includeConditional: true })).toHaveLength(2)
+  })
+
+  it('applies only the chosen conditions', () => {
+    const levels = new Map([
+      ['agitator', 1],
+      ['peak-performance', 1],
+    ])
+    expect(activeEffects(levels, { conditions: new Set(['Monster enraged']) })).toEqual([skillEffect('agitator', 1)])
+    expect(activeEffects(levels, { conditions: new Set() })).toEqual([])
+  })
+
+  it('lists every condition with its skills', () => {
+    expect(CONDITIONS.find((c) => c.label === 'Monster enraged')?.skillIds).toEqual(['agitator'])
+    expect(CONDITIONS.find((c) => c.label === WEAK_SPOT_CONDITION)?.skillIds).toEqual(['weakness-exploit'])
   })
 })

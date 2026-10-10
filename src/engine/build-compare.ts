@@ -62,7 +62,8 @@ export function evaluateForCompare(build: Build, db: DataIndex): CompareEntry {
   return { stats: evaluateBuild(build, db), potential: evaluateBuild(build, db, { includeConditional: true }) }
 }
 
-function bestOf(values: (number | null)[]): number[] {
+/** Indices of the highest values; empty on a full tie or with fewer than two values. */
+export function bestOf(values: (number | null)[]): number[] {
   const nums = values.filter((v): v is number => v !== null)
   if (nums.length < 2) return []
   const max = Math.max(...nums)

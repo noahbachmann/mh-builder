@@ -79,3 +79,23 @@ export const HANDICRAFT_MAX_LEVEL = 5
 export function elementCap(_baseDisplayed: number): number | null {
   return null
 }
+
+/** Raw hitzone value (after tenderizing) from which Weakness Exploit counts a weak spot. Source: monsterhunterwiki "Weakness Exploit (MHWI)", gamestegy "Hit Zone values". */
+export const WEAK_SPOT_HZV = 45
+
+export type DamageType = 'cut' | 'impact' | 'shot'
+
+/** Hitzone column a weapon's main attacks use (shield bashes, phials, shelling etc. not modelled). */
+export function damageType(type: WeaponType): DamageType {
+  if (type === 'hammer' || type === 'hunting-horn') return 'impact'
+  return GUNNERS.has(type) ? 'shot' : 'cut'
+}
+
+/**
+ * Iceborne wound (clutch claw tenderize): raw hitzone -> floor(0.75 x HZV + 25); elemental hitzones unchanged.
+ * Source: tenderized columns on monsterhunterwiki MHWI Nergigante page, all 16 values match
+ * (20->40, 25->43, 45->58, 90->92, 10->32, ...).
+ */
+export function tenderize(hzv: number): number {
+  return Math.floor(0.75 * hzv + 25)
+}
