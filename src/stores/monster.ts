@@ -17,7 +17,7 @@ const PARAM = 'm'
 
 /**
  * Monsters page: selected monster, sidebar tab, damage settings. Monster data loads on first visit.
- * Builds are the compare selection (current + up to 3 saved, `stores/compare.ts`).
+ * Builds are the compare selection (current + up to 3 saved, `stores/compare.ts`); the current build can be left out.
  */
 export const useMonsterStore = defineStore('monster', () => {
   const ui = useUiStore()
@@ -40,6 +40,8 @@ export const useMonsterStore = defineStore('monster', () => {
   /** sharpness colour index, null = each weapon's top colour */
   const sharpness = ref<number | null>(null)
   const conditions = ref(new Set<string>())
+  /** include the equipped build as a column */
+  const includeCurrent = ref(true)
 
   const monsters = computed(() => index.value?.data.monsters ?? [])
   const monster = computed(() => (index.value && slug.value ? (index.value.bySlug.get(slug.value) ?? null) : null))
@@ -118,7 +120,9 @@ export const useMonsterStore = defineStore('monster', () => {
 
   /** one entry per compare column, evaluated with the chosen conditions */
   const builds = computed(() =>
-    compare.columns.map((c) => ({ id: c.id, name: c.name, stats: evaluateForMonster(c.build, db, conditions.value) })),
+    compare.columns
+      .filter((c) => includeCurrent.value || c.id !== 'current')
+      .map((c) => ({ id: c.id, name: c.name, stats: evaluateForMonster(c.build, db, conditions.value) })),
   )
   const rows = computed(() =>
     monster.value
@@ -146,6 +150,7 @@ export const useMonsterStore = defineStore('monster', () => {
     mv,
     sharpness,
     conditions,
+    includeCurrent,
     builds,
     rows,
     averages,

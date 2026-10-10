@@ -132,6 +132,14 @@ describe('hitDamage', () => {
     expect(hit(s).element).toBeCloseTo((30 * 1.27 * 0.2 + 20 * 1.27 * 0.3) / 2)
   })
 
+  it('hidden element only counts with Free Element, scaled by its level', () => {
+    const hidden = { elements: [{ type: 'water' as const, value: 300, hidden: true }] }
+    expect(hit(stats(hidden)).element).toBe(0)
+    // Free Elem 1 / 3: 33% / 100% of the hidden value; Rathalos-like water HZV 10
+    expect(hit(stats(hidden, [{ freeElement: 0.33 }])).element).toBeCloseTo(30 * 0.33 * 1.27 * 0.1)
+    expect(hit(stats(hidden, [{ freeElement: 1 }])).element).toBeCloseTo(30 * 1.27 * 0.1)
+  })
+
   it('status adds no damage', () => {
     expect(hit(stats({ elements: [{ type: 'paralysis', value: 300, hidden: false }] })).element).toBe(0)
   })

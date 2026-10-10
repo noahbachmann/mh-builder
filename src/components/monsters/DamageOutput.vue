@@ -48,11 +48,21 @@ function onMv(e: Event) {
 
       <div class="line" role="group" aria-label="Builds">
         <span class="label dim">Builds</span>
-        <button class="chip is-active" disabled title="The current build is always included">Current</button>
+        <button
+          v-focus-cell="{ region: 'damage', row: ROW.builds, col: 0 }"
+          class="chip"
+          :class="{ 'is-active': store.includeCurrent }"
+          :aria-pressed="store.includeCurrent"
+          title="The equipped build"
+          data-testid="damage-current"
+          @click="store.includeCurrent = !store.includeCurrent"
+        >
+          Current
+        </button>
         <button
           v-for="(b, i) in saved.builds"
           :key="b.id"
-          v-focus-cell="{ region: 'damage', row: ROW.builds, col: i }"
+          v-focus-cell="{ region: 'damage', row: ROW.builds, col: i + 1 }"
           class="chip"
           :class="{ 'is-active': compare.isSelected(b.id) }"
           :aria-pressed="compare.isSelected(b.id)"
@@ -125,7 +135,8 @@ function onMv(e: Event) {
       </label>
     </div>
 
-    <table class="tbl" data-testid="damage-table">
+    <p v-if="!store.builds.length" class="note dim" data-testid="damage-empty">Pick at least one build.</p>
+    <table v-else class="tbl" data-testid="damage-table">
       <thead>
         <tr>
           <th>Part</th>
