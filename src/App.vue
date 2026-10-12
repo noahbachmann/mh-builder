@@ -14,6 +14,7 @@ import ArmorPicker from './components/center/ArmorPicker.vue'
 import CharmPicker from './components/center/CharmPicker.vue'
 import DecorationScreen from './components/center/DecorationScreen.vue'
 import CompareScreen from './components/center/CompareScreen.vue'
+import MaterialsScreen from './components/center/MaterialsScreen.vue'
 import BuildOverview from './components/center/BuildOverview.vue'
 import HelpOverlay from './components/HelpOverlay.vue'
 import SkillInfobox from './components/base/SkillInfobox.vue'
@@ -116,6 +117,7 @@ onBeforeUnmount(() => uninstall?.())
         <CharmPicker v-else-if="ui.screen === 'charm'" />
         <DecorationScreen v-else-if="ui.screen === 'decorations'" />
         <CompareScreen v-else-if="ui.screen === 'compare'" />
+        <MaterialsScreen v-else-if="ui.screen === 'materials'" />
         <BuildOverview v-else />
       </div>
       <Sidebar class="right drawer-right" :class="{ 'is-open': ui.drawer === 'right' }" :inert="rightInert()" />

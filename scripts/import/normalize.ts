@@ -11,11 +11,13 @@ import type {
   GameData,
   Hitzone,
   Item,
+  Material,
   Monster,
   MonsterData,
   MonsterPart,
   MonsterReward,
   Rank,
+  Recipe,
   Stars,
   SetBonus,
   SharpnessBar,
@@ -76,8 +78,14 @@ function rankFromRarity(rarity: number): Rank {
 }
 
 export interface NormalizeResult {
-  data: GameData & MonsterData
+  data: GameData & MonsterData & { crafting: Recipe[] }
   warnings: string[]
+}
+
+/** source reward condition names -> in-game wording */
+const CONDITION_ALIAS: Record<string, string> = {
+  // bronze investigation reward box, not a quest reward
+  'Hunt (Bronze)': 'Investigation (Bronze)',
 }
 
 /** Converts MHWorldData `source_data/` CSVs into our normalized types. */
@@ -272,7 +280,7 @@ export function normalize(src: string): NormalizeResult {
     return w
   })
 
-  // --- items (only those monster rewards use)
+  // --- items (only those monster rewards and recipes use)
   const itemRows = new Map(csv('items/item_base.csv').map((r) => [r.name_en!, r]))
   const items = new Map<number, Item>()
   const itemId = (name: string, context: string): number | null => {
@@ -345,7 +353,7 @@ export function normalize(src: string): NormalizeResult {
         const id = itemId(w.item_en!, ctx)
         if (id === null) return []
         const rank = w.rank as Rank
-        return [{ rank, condition: w.condition_en!, itemId: id, stack: int(w.stack), percentage: w.percentage ? int(w.percentage) : null }]
+        return [{ rank, condition: CONDITION_ALIAS[w.condition_en!] ?? w.condition_en!, itemId: id, stack: int(w.stack), percentage: w.percentage ? int(w.percentage) : null }]
       })
       if (!hitzones.has(name)) warnings.push(`${ctx}: no hitzones`)
       return {
@@ -368,6 +376,45 @@ export function normalize(src: string): NormalizeResult {
       }
     })
 
+  // --- crafting recipes
+  const materials = (r: Row, ctx: string): Material[] =>
+    [1, 2, 3, 4].flatMap((n) => {
+      const name = r[`item${n}_name`]
+      if (!name) return []
+      const id = itemId(name, ctx)
+      return id === null ? [] : [{ itemId: id, qty: int(r[`item${n}_qty`]) }]
+    })
+  const recipes: Recipe[] = []
+  const weaponCraft = new Map<string, { create: Material[] | null; upgrade: Material[] | null }>()
+  for (const r of csv('weapons/weapon_craft.csv')) {
+    const e = weaponCraft.get(r.base_name_en!) ?? { create: null, upgrade: null }
+    e[r.type === 'Create' ? 'create' : 'upgrade'] = materials(r, `weapon craft ${r.base_name_en}`)
+    weaponCraft.set(r.base_name_en!, e)
+  }
+  for (const w of weapons) {
+    const c = weaponCraft.get(w.name)
+    if (c) recipes.push({ kind: 'weapon', id: w.id, ...c })
+  }
+  const armorCraft = new Map(csv('armors/armor_craft_ext.csv').map((r) => [r.base_name_en!, r]))
+  for (const a of armor) {
+    const r = armorCraft.get(a.name)
+    if (r) recipes.push({ kind: 'armor', id: a.id, create: materials(r, `armor craft ${a.name}`), upgrade: null })
+  }
+  // charms: sum Create + every Upgrade along the chain up to the stored max level
+  const charmCraft = new Map(csv('charms/charm_craft.csv').map((r) => [r.base_name_en!, r]))
+  const charmPrev = new Map(charmRows.map((r) => [r.name_en!, r.previous_en || null]))
+  for (const c of charms) {
+    const total = new Map<number, number>()
+    for (let name: string | null = c.name; name; name = charmPrev.get(name) ?? null) {
+      const r = charmCraft.get(name)
+      // 5 charms have no craft rows in the source (Adamantine, Razor Sharp, ...): shown as "no data"
+      if (!r) continue
+      for (const m of materials(r, `charm craft ${name}`)) total.set(m.itemId, (total.get(m.itemId) ?? 0) + m.qty)
+    }
+    if (total.size)
+      recipes.push({ kind: 'charm', id: c.id, create: [...total].map(([itemId, qty]) => ({ itemId, qty })), upgrade: null })
+  }
+
   return {
     data: {
       weapons,
@@ -379,6 +426,7 @@ export function normalize(src: string): NormalizeResult {
       skills,
       monsters,
       items: [...items.values()].sort((a, b) => a.id - b.id),
+      crafting: recipes,
     },
     warnings,
   }

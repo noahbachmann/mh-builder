@@ -2,7 +2,7 @@
 import { useBuildStore } from '../../stores/build'
 import { computed, ref } from 'vue'
 import { db } from '../../data'
-import { decodeBuild, evaluateBuild } from '../../engine'
+import { decodeBuild, evaluateBuild, suggestBuildName, uniqueName } from '../../engine'
 import { fmt } from '../../format'
 import { useCompareStore } from '../../stores/compare'
 import { useSavedStore } from '../../stores/saved'
@@ -32,8 +32,16 @@ const summaries = computed(
 )
 const copied = ref(false)
 
+// empty name: "<weapon> / <best elemental res>", numbered if taken
+const suggestedName = computed(() =>
+  uniqueName(
+    suggestBuildName(build.build, build.stats.defense.resistances, db) ?? `Build ${saved.builds.length + 1}`,
+    saved.builds.map((b) => b.name),
+  ),
+)
+
 function save() {
-  saved.save(name.value || `Build ${saved.builds.length + 1}`, build.code)
+  saved.save(name.value.trim() || suggestedName.value, build.code)
   name.value = ''
 }
 
@@ -72,12 +80,13 @@ function closeLoad(load: boolean) {
       Builds
       <span class="actions">
         <button v-focus-cell="{ region: 'builds', row: 0, col: 0 }" class="btn" data-testid="open-compare" @click="ui.openCompare()">Compare<template v-if="compare.selected.length"> ({{ compare.selected.length }})</template></button>
-        <button v-focus-cell="{ region: 'builds', row: 0, col: 1 }" class="btn" data-testid="share" @click="share">{{ copied ? 'Copied!' : 'Share link' }}</button>
-        <button v-focus-cell="{ region: 'builds', row: 0, col: 2 }" class="btn" data-testid="reset" @click="build.reset()">Clear</button>
+        <button v-focus-cell="{ region: 'builds', row: 0, col: 1 }" class="btn" data-testid="open-materials" @click="ui.openMaterials()">Materials</button>
+        <button v-focus-cell="{ region: 'builds', row: 0, col: 2 }" class="btn" data-testid="share" @click="share">{{ copied ? 'Copied!' : 'Share link' }}</button>
+        <button v-focus-cell="{ region: 'builds', row: 0, col: 3 }" class="btn" data-testid="reset" @click="build.reset()">Clear</button>
       </span>
     </header>
     <form class="save" @submit.prevent="save">
-      <input v-model="name" class="search" placeholder="Build name" aria-label="Build name" data-testid="save-name" />
+      <input v-model="name" class="search" :placeholder="suggestedName" aria-label="Build name" data-testid="save-name" />
       <button v-focus-cell="{ region: 'builds', row: 1, col: 1 }" class="btn" type="submit" data-testid="save">Save</button>
     </form>
     <div class="panel-body">

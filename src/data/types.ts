@@ -244,9 +244,33 @@ export interface Item {
   iconColor: string | null
 }
 
+export interface Material {
+  itemId: number
+  qty: number
+}
+
+/**
+ * Crafting cost of one item. Weapons: `create` = forge directly (null if it can only be upgraded),
+ * `upgrade` = from `previousId`. Armor: `create` only. Charms: `create` = the whole upgrade chain
+ * summed (only the max level is stored).
+ */
+export interface Recipe {
+  kind: 'weapon' | 'armor' | 'charm'
+  id: number
+  create: Material[] | null
+  upgrade: Material[] | null
+}
+
+/** Crafting data: lazy-loaded (see `src/data/crafting.ts`), not part of `GameData`. */
+export interface CraftingData {
+  recipes: Recipe[]
+  /** reward + material items (shared with `MonsterData`) */
+  items: Item[]
+}
+
 /** Monster page data: lazy-loaded (see `src/data/monsters.ts`), not part of `GameData`. */
 export interface MonsterData {
   monsters: Monster[]
-  /** only items referenced by monster rewards */
+  /** items referenced by monster rewards or recipes */
   items: Item[]
 }

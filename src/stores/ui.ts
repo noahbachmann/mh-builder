@@ -12,7 +12,7 @@ export type View = (typeof VIEWS)[number]
 /** open overlay column on small screens (see `composables/useBreakpoint`) */
 export type Drawer = 'left' | 'right'
 
-export type Screen = 'overview' | 'weapon' | 'armor' | 'charm' | 'decorations' | 'compare'
+export type Screen = 'overview' | 'weapon' | 'armor' | 'charm' | 'decorations' | 'compare' | 'materials'
 
 /** Which screen/tab is open; selection state that is UI-only. */
 export const useUiStore = defineStore('ui', () => {
@@ -61,6 +61,11 @@ export const useUiStore = defineStore('ui', () => {
     screen.value = 'compare'
   }
 
+  function openMaterials() {
+    closeDrawer()
+    screen.value = 'materials'
+  }
+
   function close() {
     screen.value = 'overview'
   }
@@ -81,6 +86,7 @@ export const useUiStore = defineStore('ui', () => {
     openSlot,
     openDecorations,
     openCompare,
+    openMaterials,
     close,
   }
 })

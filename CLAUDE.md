@@ -14,7 +14,7 @@ Pick a weapon, armor, charm and decorations and immediately see:
 - **EFR** (effective raw) and **EFE** (effective element)
 - a stat diff preview (up/down) when hovering a candidate item, like in the game
 
-Everything is unlocked: every weapon and armor piece is available, and armor is always fully upgraded. There is no inventory, crafting cost or material tracking.
+Everything is unlocked: every weapon and armor piece is available, and armor is always fully upgraded. There is no inventory; crafting materials are shown per item and as a per-build checklist (see "Materials").
 
 ## Scope
 
@@ -34,7 +34,6 @@ Everything is unlocked: every weapon and armor piece is available, and armor is 
 ### Later milestones
 - Situational toggles on the Equipment page (the Monsters page already has per-condition toggles).
 - DPS: per-weapon combo presets (total MV, hits, seconds), editable; weapon mechanics (phials, shelling, ammo) separate. The damage table keeps raw-per-MV and element-per-hit apart for this.
-- crafting cost for armor and weapons
 
 ### Non-goals
 - No backend, accounts or server-side storage.
@@ -70,7 +69,10 @@ src/
     hitzone-damage.ts damage per hit vs monster hitzones (states, broken, wounded, Weakness Exploit per part)
     build-codec.ts    build <-> URL string
     build-compare.ts  side-by-side comparison of several builds
-  stores/         Pinia stores (monster.ts: Monsters page state, lazy monster data, ?view=/&m= URL)
+    materials.ts      crafting materials: weapon path from scratch, build totals
+    build-name.ts     default saved-build name (weapon / best elemental res)
+  stores/         Pinia stores (monster.ts: Monsters page state, lazy monster data, ?view=/&m= URL;
+                  crafting.ts: lazy recipes + materials checklist)
   components/     slot list, right sidebar (tabs + compare window), center panel, item pickers, weapon tree, decoration screen;
                   monsters/ for the Monsters page
   input/          focus grid + keyboard shortcuts
@@ -179,6 +181,13 @@ Usable from 340px. Breakpoints in `src/composables/useBreakpoint.ts` (`BREAKPOIN
 - Center screens adapt with container queries on the center column (`@container center`), sidebars on their own width (`@container sidebar`: short tab labels).
 - Touch has no hover: the first tap on a candidate pins the preview (diff in the sidebar, row `.is-previewing`), a second tap on the same item equips. Tapping a skill name toggles the skill infobox. Keyboard hints (`.kbd`) and the Shortcuts button are hidden on `(hover: none)`.
 
+### Materials
+
+- Recipes (`crafting.json`, lazy with `items.json`, ~45 kB gzip) load on first use. Armor upgrade materials (spheres) and zenny are not in the source.
+- Selected Equipment cards list materials: weapons "Forge" and/or "Upgrade from <previous>", armor "Forge", charms "Forge, all levels" (whole upgrade chain summed). Kulve / Safi weapons and 5 charms have no data ("No crafting data").
+- Materials screen (`M`, "Materials" button): current build or a saved build (sub-tabs `A` / `D`), materials summed per item (weapon from scratch: its own Create recipe, else upgrades back to the nearest forgeable ancestor), rarest first, with the pieces that need them. Each line is a checkbox; checks persist in localStorage (`mhw-builder.materials`) per saved build id, or `code:<build code>` for an unsaved current build (moved to the id when it's saved; a current build equal to a saved one shares its list).
+- Saving with an empty name uses `<weapon name> / <element> res` (highest elemental resistance; elements tied for the highest both named, max 2; no res part when it's <= 0; `Build N` with neither), numbered ` (2)` if taken. The name input shows it as placeholder.
+
 ### Other screens and behavior
 
 - Decoration screen: pick a slot, filter decorations by slot size.
@@ -194,9 +203,9 @@ Usable from 340px. Breakpoints in `src/composables/useBreakpoint.ts` (`BREAKPOIN
   - "Special" tab for Kulve Taroth and Safi'jiiva weapons (later milestone).
 - Controls (mouse or keyboard, defined in `src/input/keyboard.ts`, shown with `?` in the app):
   - Arrows move the cursor, Enter selects or equips, Esc goes back.
-  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `8` opens decorations; `C` opens the build comparison; `S` switches Equipment / Monsters (equipment keys switch back).
+  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `8` opens decorations; `C` opens the build comparison; `M` opens the materials checklist; `S` switches Equipment / Monsters (equipment keys switch back).
   - `Q` / `E` switch the previous / next sidebar tab.
-  - `A` / `D` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen).
+  - `A` / `D` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen, build on the materials screen).
   - Tab moves between panels; each panel keeps its own cursor (roving tabindex). `F` focuses search.
 - Skill infobox: hovering any skill name (sidebar, equipment cards, picker chips, overview, comparison) shows the skill's description and every level (hovered level highlighted, secret levels marked with the secret skill and set bonuses that unlock them). Cursor is `help` over skills.
 - Sharpness bars are drawn with CSS, not images.
@@ -241,6 +250,7 @@ monster/<monster slug>                     (list icons from the wiki's "Large Mo
   - save a build, reload, load it again
   - open a shared build URL and get the same build
   - complete a full build using keyboard only
+  - materials: card materials, checklist persisted per build, auto build name
   - monsters page: field guide, info, loot ranks, damage output toggles, deep link, keyboard only
   - responsive: phone drawers + tap-to-preview, no page overflow at 340px, tablet sidebar, lg columns
 
