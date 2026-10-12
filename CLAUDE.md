@@ -28,6 +28,7 @@ Everything is unlocked: every weapon and armor piece is available, and armor is 
 - EFR/EFE calculator.
 - Keyboard navigation and shortcuts alongside mouse (no gamepad: it's a website).
 - Saved builds (localStorage) and shareable builds (build encoded in the URL).
+- Preset builds: a "Presets" tab next to "Saved" in the Builds panel with read-only seeded builds (max 40): Iceborne and base game late-game builds plus early / mid-game progression builds (see "Preset builds").
 - Build comparison: current build + up to 3 saved builds side by side (stats, skills, EFR/EFE incl. "all conditions met" EFR), best values highlighted.
 - Monsters page (second major page, like the in-game Monster Field Guide): every large monster with field guide, weaknesses, breakable parts, loot per rank, and damage per hit on every hitzone for the current + up to 3 saved builds (see "Monsters page").
 
@@ -71,6 +72,7 @@ src/
     build-compare.ts  side-by-side comparison of several builds
     materials.ts      crafting materials: weapon path from scratch, build totals
     build-name.ts     default saved-build name (weapon / best elemental res)
+    presets.ts        preset build definitions (by item name) -> Build
   stores/         Pinia stores (monster.ts: Monsters page state, lazy monster data, ?view=/&m= URL;
                   crafting.ts: lazy recipes + materials checklist)
   components/     slot list, right sidebar (tabs + compare window), center panel, item pickers, weapon tree, decoration screen;
@@ -193,6 +195,13 @@ Usable from 340px. Breakpoints in `src/composables/useBreakpoint.ts` (`BREAKPOIN
 - Decoration screen: pick a slot, filter decorations by slot size.
 - Slot list: the selected slot only changes by opening it (click, Enter, `1`–`7`), never by hover/focus. Rows keep the slot pip line's height when an item has no slots (no layout shift).
 - Loading a saved build asks "Load equipment?" (Yes/No dialog); the save icon overwrites a saved build with the current one, the trash icon deletes it.
+
+### Preset builds
+
+- Builds panel tabs "Saved" / "Presets" (focus cells, tab remembered in localStorage `mhw-builder.builds-tab`).
+- Presets live in `src/data/presets.ts` (hand-written, items by **name**; names are unique per data file), grouped Iceborne late game / Base game late game / Early & mid game. Names follow `<IB|Base> <weapon abbr> <stage>[ (flavour)]`, e.g. `IB LS late game`, `Base DB late game (element)`, `IB GS mid game (MR)`; `note` = armor + key skills. Base game builds use HR armor and size 1–3 jewels only.
+- Rows: load (same "Load equipment?" dialog) + ⇄ compare (ids `preset:<slug>`, so they also show as Damage Output chips while selected). No overwrite / delete; materials: load the preset first.
+- `engine/presets.test.ts` checks every preset resolves (no missing name, no deco dropped), no skill points over the cap, max 40.
 - Weapon tree screen:
   - Row of the 14 weapon type icons at the top.
   - Each tree (Ore, Bone, monster trees, ...) is a horizontal band. Columns are grouped by rarity (labeled header): a rarity is as wide as the longest same-rarity run on any path (e.g. Buster Sword I -> II, both R1, need 2 columns), so a column never mixes rarities. Rows = depth-first order so siblings stack. Left/right arrows stay on the row across column gaps.
@@ -248,6 +257,7 @@ monster/<monster slug>                     (list icons from the wiki's "Large Mo
   - slot a decoration (size rules enforced)
   - hover diff preview opens the comparison window in the Selected Equipment tab with correct up/down values
   - save a build, reload, load it again
+  - presets tab: load a preset, compare it, keyboard, remembered tab
   - open a shared build URL and get the same build
   - complete a full build using keyboard only
   - materials: card materials, checklist persisted per build, auto build name
