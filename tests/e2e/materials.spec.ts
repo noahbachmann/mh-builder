@@ -43,20 +43,20 @@ test('materials checklist: M opens it, checks persist per build', async ({ page 
   await expect(page.getByTestId('materials-progress')).toContainText(`1 / ${total}`)
 
   await page.reload()
-  await page.getByTestId('open-materials').click()
+  await page.getByTestId('open-overview').click()
+  await page.locator('[data-testid="overview-tab"][data-tab="materials"]').click()
   await expect(page.getByTestId('material-line').filter({ hasText: 'Iron Ore' })).toHaveAttribute('aria-checked', 'true')
 
-  // saving keeps the checks; the saved build gets its own tab (A / D)
+  // saving keeps the checks; the saved build gets its own tab
   await page.getByTestId('save-name').fill('Ice set')
   await page.getByTestId('save').click()
-  await page.locator('body').click({ position: { x: 5, y: 5 } })
-  await page.keyboard.press('d')
+  await page.getByTestId('materials-target').filter({ hasText: 'Ice set' }).click()
   await expect(page.getByTestId('materials-target').filter({ hasText: 'Ice set' })).toHaveClass(/is-active/)
   await expect(page.getByTestId('materials-progress')).toContainText(`1 / ${total}`)
 
   // a different current build has its own (empty) checklist
   await page.getByTestId('reset').click()
-  await page.keyboard.press('a')
+  await page.getByTestId('materials-target').first().click()
   await expect(page.getByTestId('materials-target').first()).toHaveClass(/is-active/)
   await expect(page.getByText('Nothing to craft')).toBeVisible()
   await page.getByTestId('materials-target').filter({ hasText: 'Ice set' }).click()

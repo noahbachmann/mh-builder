@@ -94,11 +94,6 @@ export const useCraftingStore = defineStore('crafting', () => {
     const key = shown.value?.key
     if (key) delete checks.value[key]
   }
-  function cycleTarget(step: 1 | -1) {
-    const list = targets.value
-    const i = list.findIndex((t) => t.id === target.value)
-    target.value = list[(i + step + list.length) % list.length]!.id
-  }
 
-  return { index, ensureLoaded, target, targets, shown, materials, checked, toggle, clearChecks, cycleTarget }
+  return { index, ensureLoaded, target, targets, shown, materials, checked, toggle, clearChecks }
 })

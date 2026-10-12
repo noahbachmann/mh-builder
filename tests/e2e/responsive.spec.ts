@@ -60,10 +60,15 @@ test.describe('340px', () => {
       ['7', 'charm'],
       ['8', 'decorations'],
       ['c', 'compare'],
+      ['m', 'materials'],
     ] as const) {
       await page.keyboard.press(key)
       await noPageOverflow(page, what)
     }
+    await page.keyboard.press('c')
+    await page.getByTestId('compare-add').click()
+    await noPageOverflow(page, 'compare picker')
+    await page.keyboard.press('Escape')
     await page.getByTestId('toggle-left').click()
     await noPageOverflow(page, 'slot drawer')
     // Esc closes the drawer

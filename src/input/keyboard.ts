@@ -4,20 +4,18 @@
  *
  *   1-7       open Weapon / Head / Chest / Arms / Waist / Legs / Charm
  *   8         open Decorations
- *   C         compare saved builds
- *   M         build materials checklist
+ *   C / M     overview: compare builds / materials checklist
  *   S         switch Equipment / Monsters page
  *   Q / E     previous / next sidebar tab (monster tab on the Monsters page)
- *   A / D     previous / next sub-tab of the open screen (weapon type, rank, equipment piece; loot rank)
+ *   A / D     previous / next sub-tab of the open screen (weapon type, rank, equipment piece, overview tab; loot rank)
  *   F         focus search
- *   Esc       back (close screen -> slot list)
+ *   Esc       back (close screen -> slot list; compare / materials -> summary)
  *   ?         toggle shortcut help
  */
 import { nextTick } from 'vue'
 import { EQUIP_SLOTS, DECO_SLOTS } from '../engine'
 import { WEAPON_TYPES } from '../data/types'
 import { useBuildStore } from '../stores/build'
-import { useCraftingStore } from '../stores/crafting'
 import { useMonsterStore } from '../stores/monster'
 import { useUiStore } from '../stores/ui'
 import { focusRegion, moveFocus, type Direction } from './focus-grid'
@@ -28,11 +26,11 @@ export const SHORTCUTS: [string, string][] = [
   ['Esc', 'Back'],
   ['1 – 7', 'Weapon, Head, Chest, Arms, Waist, Legs, Charm'],
   ['8', 'Decorations'],
-  ['C', 'Compare saved builds'],
-  ['M', 'Build materials checklist'],
+  ['C', 'Compare builds (overview)'],
+  ['M', 'Build materials checklist (overview)'],
   ['S', 'Equipment / Monsters page'],
   ['Q / E', 'Previous / next sidebar tab'],
-  ['A / D', 'Previous / next weapon type, rank, equipment piece, materials build or loot rank'],
+  ['A / D', 'Previous / next weapon type, rank, equipment piece, overview tab or loot rank'],
   ['Tab', 'Next panel'],
   ['F', 'Search'],
   ['?', 'Show / hide this help'],
@@ -48,9 +46,14 @@ export function installKeyboard(): () => void {
   const ui = useUiStore()
   const build = useBuildStore()
   const monster = useMonsterStore()
-  const crafting = useCraftingStore()
 
-  const focusCenter = () => nextTick(() => focusRegion('center') || focusRegion('center-tabs'))
+  // active sub-tab over the first one (lazy screens have no center cells yet)
+  const focusActiveTab = () => {
+    const el = document.querySelector<HTMLElement>('.center [data-region="center-tabs"].is-active')
+    el?.focus()
+    return !!el
+  }
+  const focusCenter = () => nextTick(() => focusRegion('center') || focusActiveTab() || focusRegion('center-tabs'))
 
   function subTab(step: 1 | -1) {
     if (ui.screen === 'weapon') ui.weaponType = cycle(WEAPON_TYPES, ui.weaponType, step)
@@ -61,8 +64,11 @@ export function installKeyboard(): () => void {
       const cur = ui.decoSlot?.slot ?? withSlots[0]!
       const next = withSlots.includes(cur) ? cycle(withSlots, cur, step) : withSlots[0]!
       ui.openDecorations(next, 0)
-    } else if (ui.screen === 'materials') crafting.cycleTarget(step)
-    else return
+    } else {
+      ui.cycleOverviewTab(step)
+      nextTick(focusActiveTab)
+      return
+    }
     focusCenter()
   }
 
@@ -98,6 +104,9 @@ export function installKeyboard(): () => void {
         if (!focusRegion('monsters')) return
       } else if (ui.screen !== 'overview') {
         ui.close()
+        nextTick(() => focusRegion('slots'))
+      } else if (ui.overviewTab !== 'summary') {
+        ui.overviewTab = 'summary'
         nextTick(() => focusRegion('slots'))
       } else return
       e.preventDefault()
@@ -139,10 +148,10 @@ export function installKeyboard(): () => void {
       ui.openDecorations()
       focusCenter()
     } else if (key === 'c') {
-      ui.openCompare()
+      ui.openOverview('compare')
       focusCenter()
     } else if (key === 'm') {
-      ui.openMaterials()
+      ui.openOverview('materials')
       focusCenter()
     } else if (key === 'q') ui.cycleTab(-1)
     else if (key === 'e') ui.cycleTab(1)

@@ -20,17 +20,18 @@ function readUrlBuild(): Build | null {
   return code ? decodeBuild(code, db) : null
 }
 
+/** Link that opens `code` on the Equipment page (other query params dropped). */
+export function shareUrlFor(code: string): string {
+  const url = new URL(location.pathname, location.origin)
+  url.searchParams.set(PARAM, code)
+  return url.toString()
+}
+
 /** Equipped build + derived stats; mirrors the build into `?b=` so the URL is always shareable. */
 export const useBuildStore = defineStore('build', () => {
   const build = ref<Build>(readUrlBuild() ?? emptyBuild())
   const stats = computed(() => evaluateBuild(build.value, db))
   const code = computed(() => encodeBuild(build.value))
-
-  const shareUrl = computed(() => {
-    const url = new URL(location.href)
-    url.searchParams.set(PARAM, code.value)
-    return url.toString()
-  })
 
   watch(code, (c) => {
     const url = new URL(location.href)
@@ -57,5 +58,5 @@ export const useBuildStore = defineStore('build', () => {
     build.value = emptyBuild()
   }
 
-  return { build, stats, code, shareUrl, equip, setDeco, load, loadCode, reset }
+  return { build, stats, code, equip, setDeco, load, loadCode, reset }
 })
