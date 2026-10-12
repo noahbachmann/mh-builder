@@ -27,9 +27,9 @@ Everything is unlocked: every weapon and armor piece is available, and armor is 
 - Skill totals with caps, set bonuses and secret skills.
 - EFR/EFE calculator.
 - Keyboard navigation and shortcuts alongside mouse (no gamepad: it's a website).
-- Saved builds (localStorage) and shareable builds (build encoded in the URL).
+- Saved builds (localStorage) and shareable builds (build encoded in the URL; "Link" on every saved / preset row copies that build's link).
 - Preset builds: a "Presets" tab next to "Saved" in the Builds panel with read-only seeded builds (max 40): Iceborne and base game late-game builds plus early / mid-game progression builds (see "Preset builds").
-- Build comparison: current build + up to 3 saved builds side by side (stats, skills, EFR/EFE incl. "all conditions met" EFR), best values highlighted.
+- Build comparison (Overview > Compare): current build + up to 3 saved builds / presets (added with "+") side by side (stats, skills, EFR/EFE incl. "all conditions met" EFR), best values highlighted.
 - Monsters page (second major page, like the in-game Monster Field Guide): every large monster with field guide, weaknesses, breakable parts, loot per rank, and damage per hit on every hitzone for the current + up to 3 saved builds (see "Monsters page").
 
 ### Later milestones
@@ -157,7 +157,10 @@ Hover / focus compare:
 
 The game shows the hunter model here. We use the space for information the game hides or spreads across several menus:
 - The item picker, weapon tree and decoration screen open here when a slot is selected.
-- With no picker open, show a build overview: the full equipment list with slots and decorations, an EFR/EFE breakdown (true raw, sharpness multiplier, affinity, crit multiplier) and full descriptions of the active skills.
+- With no picker open, show the **Overview** screen (Builds panel "Overview" button) with sub-tabs (`A` / `D`; `C` / `M` jump; Esc back to Summary):
+  - **Summary**: the full equipment list with slots and decorations, an EFR/EFE breakdown (true raw, sharpness multiplier, affinity, crit multiplier) and full descriptions of the active skills.
+  - **Compare**: the build comparison. "+" opens the Builds panel list (Saved / Presets, same component) as a picker above the table; picking adds the build (already compared ones are marked, not pickable); Esc closes it.
+  - **Materials**: the materials checklist (see "Materials").
 - This content can grow over time, but it should not repeat what the sidebar already shows as its main content.
 
 ### Monsters page
@@ -187,20 +190,21 @@ Usable from 340px. Breakpoints in `src/composables/useBreakpoint.ts` (`BREAKPOIN
 
 - Recipes (`crafting.json`, lazy with `items.json`, ~45 kB gzip) load on first use. Armor upgrade materials (spheres) and zenny are not in the source.
 - Selected Equipment cards list materials: weapons "Forge" and/or "Upgrade from <previous>", armor "Forge", charms "Forge, all levels" (whole upgrade chain summed). Kulve / Safi weapons and 5 charms have no data ("No crafting data").
-- Materials screen (`M`, "Materials" button): current build or a saved build (sub-tabs `A` / `D`), materials summed per item (weapon from scratch: its own Create recipe, else upgrades back to the nearest forgeable ancestor), rarest first, with the pieces that need them. Each line is a checkbox; checks persist in localStorage (`mhw-builder.materials`) per saved build id, or `code:<build code>` for an unsaved current build (moved to the id when it's saved; a current build equal to a saved one shares its list).
+- Materials sub-tab (`M`, Overview > Materials): current build or a saved build (build chips, click / arrows only: `A` / `D` switch the Overview sub-tabs), materials summed per item (weapon from scratch: its own Create recipe, else upgrades back to the nearest forgeable ancestor), rarest first, with the pieces that need them. Each line is a checkbox; checks persist in localStorage (`mhw-builder.materials`) per saved build id, or `code:<build code>` for an unsaved current build (moved to the id when it's saved; a current build equal to a saved one shares its list).
 - Saving with an empty name uses `<weapon name> / <element> res` (highest elemental resistance; elements tied for the highest both named, max 2; no res part when it's <= 0; `Build N` with neither), numbered ` (2)` if taken. The name input shows it as placeholder.
 
 ### Other screens and behavior
 
 - Decoration screen: pick a slot, filter decorations by slot size.
 - Slot list: the selected slot only changes by opening it (click, Enter, `1`–`7`), never by hover/focus. Rows keep the slot pip line's height when an item has no slots (no layout shift).
-- Loading a saved build asks "Load equipment?" (Yes/No dialog); the save icon overwrites a saved build with the current one, the trash icon deletes it.
+- Builds panel header: "Overview" (opens the Overview screen on its last sub-tab) and "Clear". Saved rows: load, "Link" (copies `?b=<code>` of that build), save icon (overwrite with the current build), trash (delete).
+- Loading a saved build asks "Load equipment?" (Yes/No dialog).
 
 ### Preset builds
 
 - Builds panel tabs "Saved" / "Presets" (focus cells, tab remembered in localStorage `mhw-builder.builds-tab`).
 - Presets live in `src/data/presets.ts` (hand-written, items by **name**; names are unique per data file), grouped Iceborne late game / Base game late game / Early & mid game. Names follow `<IB|Base> <weapon abbr> <stage>[ (flavour)]`, e.g. `IB LS late game`, `Base DB late game (element)`, `IB GS mid game (MR)`; `note` = armor + key skills. Base game builds use HR armor and size 1–3 jewels only.
-- Rows: load (same "Load equipment?" dialog) + ⇄ compare (ids `preset:<slug>`, so they also show as Damage Output chips while selected). No overwrite / delete; materials: load the preset first.
+- Rows: load (same "Load equipment?" dialog) + "Link". Compared through the Compare "+" picker (ids `preset:<slug>`, so they also show as Damage Output chips while selected). No overwrite / delete; materials: load the preset first.
 - `engine/presets.test.ts` checks every preset resolves (no missing name, no deco dropped), no skill points over the cap, max 40.
 - Weapon tree screen:
   - Row of the 14 weapon type icons at the top.
@@ -212,9 +216,9 @@ Usable from 340px. Breakpoints in `src/composables/useBreakpoint.ts` (`BREAKPOIN
   - "Special" tab for Kulve Taroth and Safi'jiiva weapons (later milestone).
 - Controls (mouse or keyboard, defined in `src/input/keyboard.ts`, shown with `?` in the app):
   - Arrows move the cursor, Enter selects or equips, Esc goes back.
-  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `8` opens decorations; `C` opens the build comparison; `M` opens the materials checklist; `S` switches Equipment / Monsters (equipment keys switch back).
+  - `1`–`7` open Weapon / Head / Chest / Arms / Waist / Legs / Charm; `8` opens decorations; `C` / `M` open the Overview on Compare / Materials; `S` switches Equipment / Monsters (equipment keys switch back).
   - `Q` / `E` switch the previous / next sidebar tab.
-  - `A` / `D` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen, build on the materials screen).
+  - `A` / `D` switch the previous / next sub-tab of the open screen (weapon type, armor rank, equipment piece in the decoration screen, Overview sub-tab).
   - Tab moves between panels; each panel keeps its own cursor (roving tabindex). `F` focuses search.
 - Skill infobox: hovering any skill name (sidebar, equipment cards, picker chips, overview, comparison) shows the skill's description and every level (hovered level highlighted, secret levels marked with the secret skill and set bonuses that unlock them). Cursor is `help` over skills.
 - Sharpness bars are drawn with CSS, not images.
@@ -258,7 +262,8 @@ monster/<monster slug>                     (list icons from the wiki's "Large Mo
   - hover diff preview opens the comparison window in the Selected Equipment tab with correct up/down values
   - save a build, reload, load it again
   - presets tab: load a preset, compare it, keyboard, remembered tab
-  - open a shared build URL and get the same build
+  - open a shared build URL and get the same build; per-row share links
+  - Overview sub-tabs (A / D, C / M, Esc), compare "+" picker (presets, full at 3, Esc)
   - complete a full build using keyboard only
   - materials: card materials, checklist persisted per build, auto build name
   - monsters page: field guide, info, loot ranks, damage output toggles, deep link, keyboard only
