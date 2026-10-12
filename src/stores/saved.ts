@@ -1,12 +1,35 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { db } from '../data'
+import { PRESETS } from '../data/presets'
+import { encodeBuild, PRESET_PREFIX, resolvePreset, type PresetGroup } from '../engine'
 
-export interface SavedBuild {
+/** anything listed in the Builds panel: a saved build or a preset */
+export interface NamedBuild {
   id: string
   name: string
   code: string
+}
+
+export interface SavedBuild extends NamedBuild {
   savedAt: number
 }
+
+export interface PresetBuild extends NamedBuild {
+  group: PresetGroup
+  note: string
+}
+
+/** read-only seeded builds, ids `preset:<slug>` */
+export const PRESET_BUILDS: PresetBuild[] = PRESETS.map((p) => ({
+  id: PRESET_PREFIX + p.slug,
+  name: p.name,
+  code: encodeBuild(resolvePreset(p, db).build),
+  group: p.group,
+  note: p.note,
+}))
+
+export const isPresetId = (id: string) => id.startsWith(PRESET_PREFIX)
 
 const KEY = 'mhw-builder.saved'
 
@@ -51,5 +74,10 @@ export const useSavedStore = defineStore('saved', () => {
     persist()
   }
 
-  return { builds, save, overwrite, rename, remove }
+  /** saved build or preset by id */
+  function find(id: string): NamedBuild | undefined {
+    return isPresetId(id) ? PRESET_BUILDS.find((b) => b.id === id) : builds.value.find((b) => b.id === id)
+  }
+
+  return { builds, presets: PRESET_BUILDS, find, save, overwrite, rename, remove }
 })

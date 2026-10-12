@@ -10,7 +10,7 @@ const KEY = 'mhw-builder.compare'
 export const MAX_COMPARED = 3
 
 export interface CompareColumn extends CompareEntry {
-  /** saved build id, or 'current' */
+  /** saved build or preset id, or 'current' */
   id: string
   name: string
   build: Build
@@ -25,16 +25,16 @@ function read(): string[] {
   }
 }
 
-/** Saved builds picked for comparison; the current build is always the first column. */
+/** Saved builds / presets picked for comparison; the current build is always the first column. */
 export const useCompareStore = defineStore('compare', () => {
   const saved = useSavedStore()
   const current = useBuildStore()
   const selected = ref<string[]>(read())
 
-  // drop ids of deleted builds
+  // drop ids of deleted builds (and presets that no longer exist)
   watch(
     () => saved.builds,
-    (list) => (selected.value = selected.value.filter((id) => list.some((b) => b.id === id))),
+    () => (selected.value = selected.value.filter((id) => saved.find(id))),
     { immediate: true },
   )
   watch(selected, (ids) => {
@@ -59,7 +59,7 @@ export const useCompareStore = defineStore('compare', () => {
   // saved builds evaluated once per code, not on every current-build change
   const savedColumns = computed(() =>
     selected.value.flatMap((id): CompareColumn[] => {
-      const b = saved.builds.find((x) => x.id === id)
+      const b = saved.find(id)
       const build = b && decodeBuild(b.code, db)
       return b && build ? [{ id, name: b.name, build, ...evaluateForCompare(build, db) }] : []
     }),

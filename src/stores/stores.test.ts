@@ -96,6 +96,17 @@ describe('saved store', () => {
     localStorage.setItem('mhw-builder.saved', '{not json')
     expect(useSavedStore().builds).toEqual([])
   })
+
+  it('finds saved builds and presets by id; presets are not saved builds', () => {
+    const s = useSavedStore()
+    const b = s.save('Mine', '1.abc')
+    const preset = s.presets.find((p) => p.name === 'IB LS late game')!
+    expect(preset.id).toBe('preset:ib-ls-late')
+    expect(s.find(preset.id)).toEqual(preset)
+    expect(s.find(b.id)?.name).toBe('Mine')
+    expect(s.find('preset:nope')).toBeUndefined()
+    expect(s.builds.map((x) => x.id)).toEqual([b.id])
+  })
 })
 
 describe('ui store', () => {
@@ -143,5 +154,17 @@ describe('compare store', () => {
     saved.remove(ids[0]!)
     await nextTick()
     expect(c.selected).toEqual(ids.slice(1, 3))
+  })
+
+  it('compares presets and keeps them when saved builds change', async () => {
+    const saved = useSavedStore()
+    const preset = saved.presets[0]!
+    const c = useCompareStore()
+    c.toggle(preset.id)
+    expect(c.columns.map((x) => x.name)).toEqual(['Current build', preset.name])
+    expect(c.columns[1]!.stats.weapon).not.toBeNull()
+    saved.save('Other', code(gs1.id))
+    await nextTick()
+    expect(c.selected).toEqual([preset.id])
   })
 })
