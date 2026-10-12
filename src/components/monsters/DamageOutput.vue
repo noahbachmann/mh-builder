@@ -15,13 +15,18 @@ import { WEAPON_TYPE_LABEL, capitalize, fmt } from '../../format'
 import { vFocusCell } from '../../input/focus-grid'
 import { useCompareStore } from '../../stores/compare'
 import { MAX_WEIGHT, useMonsterStore } from '../../stores/monster'
-import { useSavedStore } from '../../stores/saved'
+import { isPresetId, useSavedStore } from '../../stores/saved'
 import { vSkillInfo } from '../../stores/skill-info'
 import ModeChips from './ModeChips.vue'
 
 const store = useMonsterStore()
 const compare = useCompareStore()
 const saved = useSavedStore()
+// all saved builds, plus presets picked in the Builds panel (all of them would be too many chips)
+const buildChips = computed(() => [
+  ...saved.builds,
+  ...compare.selected.flatMap((id) => (isPresetId(id) ? (saved.find(id) ?? []) : [])),
+])
 
 // focus grid rows: settings first, part rows, then skill condition rows
 const ROW = { mode: 0, builds: 1, sharpness: 3, mv: 4, table: 10, skills: 200 } as const
@@ -108,7 +113,7 @@ function onMv(e: Event) {
           Current
         </button>
         <button
-          v-for="(b, i) in saved.builds"
+          v-for="(b, i) in buildChips"
           :key="b.id"
           v-focus-cell="{ region: 'damage', row: ROW.builds, col: i + 1 }"
           class="chip"
@@ -120,7 +125,7 @@ function onMv(e: Event) {
         >
           {{ b.name }}
         </button>
-        <span v-if="!saved.builds.length" class="faint hint">Save builds on the Equipment page to compare them here.</span>
+        <span v-if="!buildChips.length" class="faint hint">Save builds or pick presets (⇄) on the Equipment page to compare them here.</span>
       </div>
 
 

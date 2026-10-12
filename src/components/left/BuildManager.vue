@@ -5,7 +5,8 @@ import { db } from '../../data'
 import { decodeBuild, evaluateBuild, suggestBuildName, uniqueName } from '../../engine'
 import { fmt } from '../../format'
 import { useCompareStore } from '../../stores/compare'
-import { useSavedStore } from '../../stores/saved'
+import { useSavedStore, type NamedBuild, type PresetBuild } from '../../stores/saved'
+import type { PresetGroup } from '../../engine'
 import { useUiStore } from '../../stores/ui'
 import { focusCell, vFocusCell } from '../../input/focus-grid'
 import { icons } from '../../icons'
@@ -19,17 +20,49 @@ const ui = useUiStore()
 const name = ref('')
 
 // weapon + EFR so saved builds are easy to tell apart
-const summaries = computed(
-  () =>
-    new Map(
-      saved.builds.map((b) => {
-        const build = decodeBuild(b.code, db)
-        const w = build?.weapon != null ? db.weapon.get(build.weapon) : undefined
-        const efr = build && w ? evaluateBuild(build, db).efr?.efr : undefined
-        return [b.id, w ? `${efr !== undefined ? `EFR ${fmt(efr, 1)} · ` : ''}${w.name}` : 'No weapon']
-      }),
-    ),
-)
+function summarize(b: NamedBuild): string {
+  const build = decodeBuild(b.code, db)
+  const w = build?.weapon != null ? db.weapon.get(build.weapon) : undefined
+  const efr = build && w ? evaluateBuild(build, db).efr?.efr : undefined
+  return w ? `${efr !== undefined ? `EFR ${fmt(efr, 1)} · ` : ''}${w.name}` : 'No weapon'
+}
+const summaries = computed(() => new Map(saved.builds.map((b) => [b.id, summarize(b)])))
+// presets never change: evaluate once
+const presetSummaries = new Map(saved.presets.map((b) => [b.id, summarize(b)]))
+
+type Tab = 'saved' | 'presets'
+const TAB_KEY = 'mhw-builder.builds-tab'
+function readTab(): Tab {
+  try {
+    return localStorage.getItem(TAB_KEY) === 'presets' ? 'presets' : 'saved'
+  } catch {
+    return 'saved'
+  }
+}
+const tab = ref<Tab>(readTab())
+function setTab(t: Tab) {
+  tab.value = t
+  try {
+    localStorage.setItem(TAB_KEY, t)
+  } catch {
+    // storage disabled: per session only
+  }
+}
+
+const GROUP_LABEL: Record<PresetGroup, string> = {
+  iceborne: 'Iceborne late game',
+  base: 'Base game late game',
+  progression: 'Early & mid game',
+}
+// focus rows run on across group headers
+const presetGroups = computed(() => {
+  let row = 2
+  return (Object.keys(GROUP_LABEL) as PresetGroup[]).map((group) => ({
+    group,
+    label: GROUP_LABEL[group],
+    items: saved.presets.filter((p) => p.group === group).map((p): PresetBuild & { row: number } => ({ ...p, row: row++ })),
+  }))
+})
 const copied = ref(false)
 
 // empty name: "<weapon> / <best elemental res>", numbered if taken
@@ -85,15 +118,69 @@ function closeLoad(load: boolean) {
         <button v-focus-cell="{ region: 'builds', row: 0, col: 3 }" class="btn" data-testid="reset" @click="build.reset()">Clear</button>
       </span>
     </header>
-    <form class="save" @submit.prevent="save">
+    <nav class="tabs" role="tablist" aria-label="Build lists">
+      <button
+        v-focus-cell="{ region: 'builds', row: 1, col: 0 }"
+        class="tab"
+        role="tab"
+        :class="{ 'is-active': tab === 'saved' }"
+        :aria-selected="tab === 'saved'"
+        data-testid="builds-tab-saved"
+        @click="setTab('saved')"
+      >
+        Saved<span v-if="saved.builds.length" class="faint num"> {{ saved.builds.length }}</span>
+      </button>
+      <button
+        v-focus-cell="{ region: 'builds', row: 1, col: 1 }"
+        class="tab"
+        role="tab"
+        :class="{ 'is-active': tab === 'presets' }"
+        :aria-selected="tab === 'presets'"
+        data-testid="builds-tab-presets"
+        @click="setTab('presets')"
+      >
+        Presets
+      </button>
+    </nav>
+    <div v-if="tab === 'presets'" class="panel-body" data-testid="preset-list">
+      <section v-for="g in presetGroups" :key="g.group" :aria-label="g.label">
+        <h3 class="group-head dim">{{ g.label }}</h3>
+        <div v-for="b in g.items" :key="b.id" class="saved" data-testid="preset-build">
+          <button
+            v-focus-cell="{ region: 'builds', row: b.row, col: 0 }"
+            class="row-btn load"
+            :title="`Load ${b.name}\n${b.note}\n${presetSummaries.get(b.id)}`"
+            data-testid="load-preset"
+            @click="askLoad(b, $event)"
+          >
+            <span class="saved-text">
+              <span class="saved-name">{{ b.name }}</span>
+              <span class="faint sub">{{ b.note }}</span>
+              <span class="faint sub">{{ presetSummaries.get(b.id) }}</span>
+            </span>
+          </button>
+          <button
+            v-focus-cell="{ region: 'builds', row: b.row, col: 1 }"
+            class="mini"
+            :class="{ on: compare.isSelected(b.id) }"
+            :aria-pressed="compare.isSelected(b.id)"
+            :disabled="!compare.isSelected(b.id) && compare.isFull"
+            :title="compare.isSelected(b.id) ? 'Remove from comparison' : compare.isFull ? 'Comparing 3 builds already' : 'Add to comparison'"
+            data-testid="compare-toggle"
+            @click="compare.toggle(b.id)"
+          >⇄</button>
+        </div>
+      </section>
+    </div>
+    <form v-if="tab === 'saved'" class="save" @submit.prevent="save">
       <input v-model="name" class="search" :placeholder="suggestedName" aria-label="Build name" data-testid="save-name" />
-      <button v-focus-cell="{ region: 'builds', row: 1, col: 1 }" class="btn" type="submit" data-testid="save">Save</button>
+      <button v-focus-cell="{ region: 'builds', row: 2, col: 1 }" class="btn" type="submit" data-testid="save">Save</button>
     </form>
-    <div class="panel-body">
+    <div v-if="tab === 'saved'" class="panel-body">
       <p v-if="!saved.builds.length" class="faint empty">No saved builds. Builds are stored in this browser only.</p>
       <div v-for="(b, i) in saved.builds" :key="b.id" class="saved" data-testid="saved-build">
         <button
-          v-focus-cell="{ region: 'builds', row: i + 2, col: 0 }"
+          v-focus-cell="{ region: 'builds', row: i + 3, col: 0 }"
           class="row-btn load"
           :title="`Load ${b.name}`"
           data-testid="load-build"
@@ -105,7 +192,7 @@ function closeLoad(load: boolean) {
           </span>
         </button>
         <button
-          v-focus-cell="{ region: 'builds', row: i + 2, col: 1 }"
+          v-focus-cell="{ region: 'builds', row: i + 3, col: 1 }"
           class="mini"
           :class="{ on: compare.isSelected(b.id) }"
           :aria-pressed="compare.isSelected(b.id)"
@@ -115,7 +202,7 @@ function closeLoad(load: boolean) {
           @click="compare.toggle(b.id)"
         >⇄</button>
         <button
-          v-focus-cell="{ region: 'builds', row: i + 2, col: 2 }"
+          v-focus-cell="{ region: 'builds', row: i + 3, col: 2 }"
           class="mini"
           title="Save current build here (overwrite)"
           aria-label="Save current build here"
@@ -125,7 +212,7 @@ function closeLoad(load: boolean) {
           <Icon :id="icons.ui('save')" :size="15" />
         </button>
         <button
-          v-focus-cell="{ region: 'builds', row: i + 2, col: 3 }"
+          v-focus-cell="{ region: 'builds', row: i + 3, col: 3 }"
           class="mini"
           title="Delete"
           aria-label="Delete build"
@@ -158,6 +245,14 @@ function closeLoad(load: boolean) {
   gap: 4px;
   text-transform: none;
   letter-spacing: 0;
+}
+.group-head {
+  margin: 0;
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 .save {
   display: flex;

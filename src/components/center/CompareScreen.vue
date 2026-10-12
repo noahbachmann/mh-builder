@@ -81,7 +81,7 @@ function load(b: Build) {
     </header>
     <div class="panel-body body">
       <p v-if="cols.length < 2" class="empty dim" data-testid="compare-empty">
-        Pick saved builds to compare with the ⇄ button in the Builds list (up to 3). The current build is always the first column.
+        Pick saved builds or presets to compare with the ⇄ button in the Builds list (up to 3). The current build is always the first column.
       </p>
 
       <table v-else class="grid">
