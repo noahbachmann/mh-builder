@@ -5,6 +5,7 @@
  *   1-7       open Weapon / Head / Chest / Arms / Waist / Legs / Charm
  *   8         open Decorations
  *   C         compare saved builds
+ *   M         build materials checklist
  *   S         switch Equipment / Monsters page
  *   Q / E     previous / next sidebar tab (monster tab on the Monsters page)
  *   A / D     previous / next sub-tab of the open screen (weapon type, rank, equipment piece; loot rank)
@@ -16,6 +17,7 @@ import { nextTick } from 'vue'
 import { EQUIP_SLOTS, DECO_SLOTS } from '../engine'
 import { WEAPON_TYPES } from '../data/types'
 import { useBuildStore } from '../stores/build'
+import { useCraftingStore } from '../stores/crafting'
 import { useMonsterStore } from '../stores/monster'
 import { useUiStore } from '../stores/ui'
 import { focusRegion, moveFocus, type Direction } from './focus-grid'
@@ -27,9 +29,10 @@ export const SHORTCUTS: [string, string][] = [
   ['1 – 7', 'Weapon, Head, Chest, Arms, Waist, Legs, Charm'],
   ['8', 'Decorations'],
   ['C', 'Compare saved builds'],
+  ['M', 'Build materials checklist'],
   ['S', 'Equipment / Monsters page'],
   ['Q / E', 'Previous / next sidebar tab'],
-  ['A / D', 'Previous / next weapon type, rank, equipment piece or loot rank'],
+  ['A / D', 'Previous / next weapon type, rank, equipment piece, materials build or loot rank'],
   ['Tab', 'Next panel'],
   ['F', 'Search'],
   ['?', 'Show / hide this help'],
@@ -45,6 +48,7 @@ export function installKeyboard(): () => void {
   const ui = useUiStore()
   const build = useBuildStore()
   const monster = useMonsterStore()
+  const crafting = useCraftingStore()
 
   const focusCenter = () => nextTick(() => focusRegion('center') || focusRegion('center-tabs'))
 
@@ -57,7 +61,8 @@ export function installKeyboard(): () => void {
       const cur = ui.decoSlot?.slot ?? withSlots[0]!
       const next = withSlots.includes(cur) ? cycle(withSlots, cur, step) : withSlots[0]!
       ui.openDecorations(next, 0)
-    } else return
+    } else if (ui.screen === 'materials') crafting.cycleTarget(step)
+    else return
     focusCenter()
   }
 
@@ -125,7 +130,7 @@ export function installKeyboard(): () => void {
         return
       }
       // equipment shortcuts switch back to the Equipment page
-      if (/^[1-8c]$/.test(key)) ui.view = 'equipment'
+      if (/^[1-8cm]$/.test(key)) ui.view = 'equipment'
     }
     if (/^[1-7]$/.test(key)) {
       ui.openSlot(EQUIP_SLOTS[Number(key) - 1]!)
@@ -135,6 +140,9 @@ export function installKeyboard(): () => void {
       focusCenter()
     } else if (key === 'c') {
       ui.openCompare()
+      focusCenter()
+    } else if (key === 'm') {
+      ui.openMaterials()
       focusCenter()
     } else if (key === 'q') ui.cycleTab(-1)
     else if (key === 'e') ui.cycleTab(1)

@@ -7,6 +7,7 @@ import { WEAPON_TYPE_LABEL, capitalize, elementLabel, fmt } from '../../format'
 import Icon from '../base/Icon.vue'
 import SharpnessBar from '../base/SharpnessBar.vue'
 import SlotPips from '../base/SlotPips.vue'
+import CardMaterials from './CardMaterials.vue'
 import { vSkillInfo } from '../../stores/skill-info'
 
 export type CardItem =
@@ -181,6 +182,7 @@ const baseBar = computed(() => {
         <div class="label">Set bonus</div>
         <div class="setb">{{ setBonus }}</div>
       </template>
+      <CardMaterials v-if="card.kind !== 'deco'" :card="card" />
     </template>
   </article>
 </template>

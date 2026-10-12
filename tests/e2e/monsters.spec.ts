@@ -30,6 +30,9 @@ test('S opens the Monsters page; field guide, info and loot', async ({ page }) =
   await page.keyboard.press('a')
   await expect(page.getByTestId('loot-rank-HR')).toHaveAttribute('aria-selected', 'true')
   await expect(page.getByTestId('monster-loot')).toContainText('Rathalos Scale+')
+  // source's "Hunt (Bronze)" is the bronze investigation box
+  await expect(page.getByTestId('monster-loot')).toContainText('Investigation (Bronze)')
+  await expect(page.getByTestId('monster-loot')).not.toContainText('Hunt (Bronze)')
 
   // equipment shortcut goes back
   await page.keyboard.press('1')
