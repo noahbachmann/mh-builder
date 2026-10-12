@@ -15,15 +15,21 @@ test('compare saved builds: stats, skills and damage side by side', async ({ pag
   await saveBuild(page, STRONG, 'Strong')
   await page.getByTestId('reset').click()
 
-  await page.getByTestId('open-compare').click()
+  await page.getByTestId('open-overview').click()
+  await page.locator('[data-testid="overview-tab"][data-tab="compare"]').click()
   await expect(page.getByTestId('compare-empty')).toBeVisible()
 
-  // newest first: Strong, Weak
-  const toggles = page.getByTestId('compare-toggle')
-  await toggles.nth(0).click()
-  await toggles.nth(1).click()
-  await expect(toggles.nth(0)).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByTestId('open-compare')).toHaveText('Compare (2)')
+  // "+" opens the Builds list as a picker; newest first: Strong, Weak
+  const picker = page.getByTestId('compare-picker')
+  await page.getByTestId('compare-add').click()
+  await expect(picker.getByTestId('save-name')).toHaveCount(0)
+  await picker.getByTestId('pick-build').filter({ hasText: 'Strong' }).click()
+  await expect(picker).toHaveCount(0)
+  await page.getByTestId('compare-add').click()
+  // compared builds stay listed but can't be picked twice
+  await expect(picker.getByTestId('pick-build').filter({ hasText: 'Strong' })).toHaveAttribute('aria-disabled', 'true')
+  await picker.getByTestId('pick-build').filter({ hasText: 'Weak' }).click()
+  await expect(page.locator('[data-testid="overview-tab"][data-tab="compare"]')).toHaveText('Compare2')
 
   const columns = page.getByTestId('compare-column')
   await expect(columns).toHaveCount(3)
@@ -52,9 +58,39 @@ test('compare saved builds: stats, skills and damage side by side', async ({ pag
   await expectSlot(page, 'weapon', 'Defender Great Sword II')
   await expectSlot(page, 'head', 'Rimeguard Helm α+')
 
-  await page.getByTestId('open-compare').click()
+  await page.keyboard.press('c')
   await page.getByTestId('compare-remove').last().click()
   await expect(page.getByTestId('compare-column')).toHaveCount(2)
   // current build now equals "Strong": no best marks on EFR
   await expect(page.getByTestId('compare-efr').locator('[data-best]')).toHaveCount(0)
+})
+
+test('compare picker: presets tab, full at 3, Esc closes it', async ({ page }) => {
+  await saveBuild(page, WEAK, 'Weak')
+  await page.keyboard.press('c')
+  const picker = page.getByTestId('compare-picker')
+
+  await page.getByTestId('compare-add').click()
+  // cursor starts on the first pickable build
+  await expect(picker.getByTestId('pick-build').first()).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(picker).toHaveCount(0)
+  await expect(page.getByTestId('compare-add')).toBeFocused()
+  // Esc only closed the picker, not the compare tab
+  await expect(page.locator('[data-testid="overview-tab"][data-tab="compare"]')).toHaveClass(/is-active/)
+
+  await page.getByTestId('compare-add').click()
+  await picker.getByTestId('builds-tab-presets').click()
+  await picker.getByTestId('pick-build').filter({ hasText: 'IB LS late game' }).click()
+  await page.getByTestId('compare-add').click()
+  await picker.getByTestId('builds-tab-presets').click()
+  await picker.getByTestId('pick-build').filter({ hasText: 'IB GS late game' }).click()
+  await page.getByTestId('compare-add').click()
+  await picker.getByTestId('builds-tab-saved').click()
+  await picker.getByTestId('pick-build').filter({ hasText: 'Weak' }).click()
+  await expect(page.getByTestId('compare-column')).toHaveCount(4)
+  await expect(page.getByTestId('compare-add')).toHaveCount(0)
+
+  // the picker's tab doesn't change the Builds panel's remembered tab
+  await expect(page.getByTestId('save-name')).toBeVisible()
 })

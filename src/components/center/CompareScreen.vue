@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, type ComponentPublicInstance } from 'vue'
 import { db } from '../../data'
 import { EQUIP_SLOTS, SHARPNESS_COLORS, type Build, type EquipSlot, type MetricKey, type MetricRow } from '../../engine'
 import { SLOT_LABEL, capitalize, elementLabel, fmt, signed } from '../../format'
-import { vFocusCell } from '../../input/focus-grid'
+import { focusCell, focusRegion, vFocusCell } from '../../input/focus-grid'
 import { useBuildStore } from '../../stores/build'
 import { useCompareStore } from '../../stores/compare'
 import { useUiStore } from '../../stores/ui'
 import { vSkillInfo } from '../../stores/skill-info'
 import type { ElementOrStatus } from '../../data/types'
+import BuildList from '../left/BuildList.vue'
 
 const compare = useCompareStore()
 const current = useBuildStore()
@@ -67,22 +68,57 @@ function delta(row: MetricRow, i: number) {
   return { text, dir: d.dir }
 }
 
+// "+": the Builds panel list (Saved / Presets) as a picker above the table
+const picking = ref(false)
+const addEl = ref<HTMLElement | null>(null)
+const pickerEl = ref<ComponentPublicInstance | null>(null)
+function openPicker() {
+  picking.value = true
+  nextTick(() => {
+    const first = pickerEl.value?.$el.querySelector('[data-testid="pick-build"]:not([aria-disabled])') as HTMLElement | null
+    if (first) focusCell(first)
+    else focusRegion('build-picker')
+  })
+}
+function closePicker() {
+  picking.value = false
+  nextTick(() => addEl.value?.isConnected && focusCell(addEl.value))
+}
+const togglePicker = () => (picking.value ? closePicker() : openPicker())
+function add(id: string) {
+  compare.toggle(id)
+  closePicker()
+}
+
 function load(b: Build) {
   current.load(b)
-  ui.close()
+  ui.openOverview('summary')
 }
 </script>
 
 <template>
-  <section class="panel compare" aria-label="Compare builds" data-testid="compare-screen">
-    <header class="panel-head">
-      Compare builds
-      <button v-focus-cell="{ region: 'center-tabs', row: 0, col: 0 }" class="btn close" @click="ui.close()">Close <span class="kbd">Esc</span></button>
-    </header>
+  <div class="compare" data-testid="compare-screen">
+    <section v-if="picking" class="picker" aria-label="Add a build to the comparison" data-testid="compare-picker" @keydown.esc.stop.prevent="closePicker()">
+      <header class="picker-head">
+        Add a build
+        <button class="mini" title="Close" data-testid="compare-picker-close" @click="closePicker()">✕ <span class="kbd">Esc</span></button>
+      </header>
+      <BuildList ref="pickerEl" mode="pick" region="build-picker" @pick="add" />
+    </section>
     <div class="panel-body body">
-      <p v-if="cols.length < 2" class="empty dim" data-testid="compare-empty">
-        Pick saved builds or presets to compare with the ⇄ button in the Builds list (up to 3). The current build is always the first column.
-      </p>
+      <div v-if="cols.length < 2" class="empty">
+        <p class="dim" data-testid="compare-empty">
+          Add saved builds or presets with + (up to 3). The current build is always the first column.
+        </p>
+        <button
+          ref="addEl"
+          v-focus-cell="{ region: 'center', row: 0, col: 0 }"
+          class="btn"
+          :aria-expanded="picking"
+          data-testid="compare-add"
+          @click="togglePicker()"
+        >+ Add build</button>
+      </div>
 
       <table v-else class="grid">
         <thead>
@@ -94,6 +130,18 @@ function load(b: Build) {
                 <button v-focus-cell="{ region: 'center', row: 0, col: i * 2 }" class="mini" data-testid="compare-load" @click="load(c.build)">Load</button>
                 <button v-focus-cell="{ region: 'center', row: 0, col: i * 2 + 1 }" class="mini" title="Remove from comparison" data-testid="compare-remove" @click="compare.remove(c.id)">✕</button>
               </div>
+            </th>
+            <th v-if="!compare.isFull" class="add-col">
+              <button
+                ref="addEl"
+                v-focus-cell="{ region: 'center', row: 0, col: 99 }"
+                class="btn"
+                title="Add a build to the comparison"
+                aria-label="Add a build to the comparison"
+                :aria-expanded="picking"
+                data-testid="compare-add"
+                @click="togglePicker()"
+              >+</button>
             </th>
           </tr>
         </thead>
@@ -158,25 +206,52 @@ function load(b: Build) {
         Gold = best value. Deltas are against the current build. "EFR, all conditions" counts situational skills as active (Peak Performance or Heroics / Resentment, whichever is higher; not Critical Draw).
       </p>
     </div>
-  </section>
+  </div>
 </template>
 
 <style scoped>
 .compare {
-  height: 100%;
-}
-.close {
-  margin-left: auto;
-  text-transform: none;
-  letter-spacing: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 .body {
   overflow: auto;
   padding-bottom: 16px;
 }
+.picker {
+  display: flex;
+  flex-direction: column;
+  max-height: min(60%, 440px);
+  min-height: 0;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-strong);
+  background: var(--panel-2);
+}
+.picker-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.picker-head .mini {
+  margin-left: auto;
+  text-transform: none;
+}
 .empty {
   padding: 12px 16px;
-  margin: 0;
+}
+.empty p {
+  margin: 0 0 8px;
+}
+.add-col {
+  vertical-align: middle;
 }
 .grid {
   border-collapse: collapse;

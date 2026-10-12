@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import { db } from '../data'
-import { useBuildStore } from './build'
+import { shareUrlFor, useBuildStore } from './build'
 import { MAX_COMPARED, useCompareStore } from './compare'
 import { usePreviewStore } from './preview'
 import { useSavedStore } from './saved'
@@ -32,6 +32,13 @@ describe('build store', () => {
   it('loads a build from the URL on start', () => {
     history.replaceState(null, '', `/?b=1.${gs2.id.toString(36)}`)
     expect(useBuildStore().build.weapon).toBe(gs2.id)
+  })
+
+  it('share links open only the given build', () => {
+    history.replaceState(null, '', '/?view=monsters&m=rathalos&b=old')
+    const url = new URL(shareUrlFor('1.abc'))
+    expect(url.pathname).toBe('/')
+    expect([...url.searchParams]).toEqual([['b', '1.abc']])
   })
 })
 
@@ -121,6 +128,21 @@ describe('ui store', () => {
     ui.openSlot('legs')
     expect(ui.screen).toBe('armor')
     expect(ui.selectedSlot).toBe('legs')
+  })
+
+  it('opens the overview on a sub-tab, keeps the last one, cycles sub-tabs', () => {
+    const ui = useUiStore()
+    ui.openSlot('weapon')
+    ui.drawer = 'left'
+    ui.openOverview('materials')
+    expect([ui.screen, ui.overviewTab, ui.drawer]).toEqual(['overview', 'materials', null])
+    ui.openSlot('head')
+    ui.openOverview()
+    expect(ui.overviewTab).toBe('materials')
+    ui.cycleOverviewTab(1)
+    expect(ui.overviewTab).toBe('summary')
+    ui.cycleOverviewTab(-1)
+    expect(ui.overviewTab).toBe('materials')
   })
 })
 

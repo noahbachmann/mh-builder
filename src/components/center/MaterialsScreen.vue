@@ -5,10 +5,8 @@ import { weaponCraftPath, type MaterialLine } from '../../engine'
 import { SLOT_LABEL } from '../../format'
 import { vFocusCell } from '../../input/focus-grid'
 import { useCraftingStore } from '../../stores/crafting'
-import { useUiStore } from '../../stores/ui'
 
 const crafting = useCraftingStore()
-const ui = useUiStore()
 onMounted(() => void crafting.ensureLoaded())
 
 const lines = computed(() => crafting.materials?.lines ?? [])
@@ -29,29 +27,13 @@ const weaponNote = computed(() => {
 </script>
 
 <template>
-  <section class="panel materials" aria-label="Build materials" data-testid="materials-screen">
-    <header class="panel-head">
-      Materials
-      <span class="head-actions">
-        <button
-          v-focus-cell="{ region: 'center-tabs', row: 0, col: 0 }"
-          class="btn"
-          :disabled="!done"
-          data-testid="materials-reset"
-          @click="crafting.clearChecks()"
-        >
-          Uncheck all
-        </button>
-        <button v-focus-cell="{ region: 'center-tabs', row: 0, col: 1 }" class="btn" @click="ui.close()">Close <span class="kbd">Esc</span></button>
-      </span>
-    </header>
-    <nav class="tabs" aria-label="Build">
-      <span class="kbd">A</span>
+  <div class="materials" data-testid="materials-screen">
+    <nav class="sub-tabs" aria-label="Build">
       <button
         v-for="(t, i) in crafting.targets"
         :key="t.id"
         v-focus-cell="{ region: 'center-tabs', row: 1, col: i }"
-        class="tab"
+        class="chip"
         :class="{ 'is-active': crafting.target === t.id }"
         :title="t.name"
         data-testid="materials-target"
@@ -59,7 +41,15 @@ const weaponNote = computed(() => {
       >
         {{ t.name }}
       </button>
-      <span class="kbd">D</span>
+      <button
+        v-focus-cell="{ region: 'center-tabs', row: 1, col: 99 }"
+        class="btn reset"
+        :disabled="!done"
+        data-testid="materials-reset"
+        @click="crafting.clearChecks()"
+      >
+        Uncheck all
+      </button>
     </nav>
     <div class="panel-body">
       <p v-if="!crafting.index" class="faint note">Loading…</p>
@@ -91,22 +81,28 @@ const weaponNote = computed(() => {
         </button>
       </template>
     </div>
-  </section>
+  </div>
 </template>
 
 <style scoped>
 .materials {
-  height: 100%;
-}
-.head-actions {
-  margin-left: auto;
   display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.sub-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
 }
-.tabs {
-  overflow-x: auto;
+.reset {
+  margin-left: auto;
 }
-.tab {
+.chip {
   max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;

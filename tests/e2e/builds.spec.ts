@@ -73,9 +73,13 @@ test('presets tab: load a preset, compare it, keyboard and remembered tab', asyn
   await expect(page.getByTestId('slot-decorations')).toContainText('16 / 16')
 
   // presets go into the comparison like saved builds
-  await ls.getByTestId('compare-toggle').click()
-  await page.getByTestId('open-compare').click()
-  await expect(page.getByTestId('compare-screen')).toContainText('IB LS late game')
+  await page.getByTestId('open-overview').click()
+  await page.locator('[data-testid="overview-tab"][data-tab="compare"]').click()
+  await page.getByTestId('compare-add').click()
+  const picker = page.getByTestId('compare-picker')
+  await picker.getByTestId('builds-tab-presets').click()
+  await picker.getByTestId('pick-build').filter({ hasText: 'IB LS late game' }).click()
+  await expect(page.getByTestId('compare-column').nth(1)).toContainText('IB LS late game')
 
   // tab is remembered; keyboard: Enter on a tab, arrow down into the list
   await page.reload()
@@ -86,11 +90,79 @@ test('presets tab: load a preset, compare it, keyboard and remembered tab', asyn
   await page.keyboard.press('ArrowRight')
   await expect(page.getByTestId('builds-tab-presets')).toBeFocused()
   await page.keyboard.press('Enter')
-  // down keeps the column: lands on the first preset's ⇄
+  // down keeps the column: lands on the first preset's share link
   await page.keyboard.press('ArrowDown')
-  await expect(page.getByTestId('preset-build').first().getByTestId('compare-toggle')).toBeFocused()
+  await expect(page.getByTestId('preset-build').first().getByTestId('share-build')).toBeFocused()
   await page.keyboard.press('ArrowLeft')
   await expect(page.getByTestId('load-preset').first()).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(page.getByTestId('confirm-dialog')).toContainText('IB GS late game')
+})
+
+test('share link per build row copies that build, not the current one', async ({ page, browser, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto(`/?b=${CODE}`)
+  await page.getByTestId('save-name').fill('Shared')
+  await page.getByTestId('save').click()
+  await page.getByTestId('reset').click()
+  await expect(page.getByTestId('builds-tab-saved')).toHaveText(/Saved\s*1/)
+
+  const row = page.getByTestId('saved-build').filter({ hasText: 'Shared' })
+  await row.getByTestId('share-build').click()
+  await expect(row.getByTestId('share-build')).toHaveText('Copied!')
+  const url = await page.evaluate(() => navigator.clipboard.readText())
+  expect(new URL(url).search).toBe(`?b=${CODE}`)
+
+  // presets too
+  await page.getByTestId('builds-tab-presets').click()
+  await page.getByTestId('preset-build').first().getByTestId('share-build').click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/\?b=1\./)
+
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 900 } })
+  const other = await ctx.newPage()
+  await other.goto(url)
+  await expectSlot(other, 'weapon', 'Defender Great Sword II')
+  await expectSlot(other, 'head', 'Rimeguard Helm α+')
+  await ctx.close()
+})
+
+test('builds header: Overview + Clear; Saved count is spaced from its label', async ({ page }) => {
+  await page.goto(`/?b=${CODE}`)
+  await page.getByTestId('save').click()
+  await expect(page.locator('.builds .panel-head button')).toHaveText(['Overview', 'Clear'])
+
+  const tab = page.getByTestId('builds-tab-saved')
+  const gap = await tab.evaluate((el) => {
+    const range = document.createRange()
+    range.selectNodeContents(el.firstChild!)
+    return el.querySelector('.count')!.getBoundingClientRect().left - range.getBoundingClientRect().right
+  })
+  expect(gap).toBeGreaterThanOrEqual(4)
+
+  // Overview reopens the last sub-tab after a picker
+  await page.keyboard.press('m')
+  await page.getByTestId('slot-head').click()
+  await page.getByTestId('open-overview').click()
+  await expect(page.getByTestId('materials-screen')).toBeVisible()
+})
+
+test('overview sub-tabs: A / D cycle, C / M jump, Esc back to the summary', async ({ page }) => {
+  await page.goto(`/?b=${CODE}`)
+  await page.locator('body').click({ position: { x: 5, y: 5 } })
+  const tab = (t: string) => page.locator(`[data-testid="overview-tab"][data-tab="${t}"]`)
+  await expect(page.getByTestId('overview-summary')).toBeVisible()
+  await page.keyboard.press('d')
+  await expect(tab('compare')).toHaveClass(/is-active/)
+  await expect(tab('compare')).toBeFocused()
+  await page.keyboard.press('d')
+  await expect(page.getByTestId('materials-screen')).toBeVisible()
+  await page.keyboard.press('d')
+  await expect(tab('summary')).toHaveClass(/is-active/)
+  await page.keyboard.press('a')
+  await expect(tab('materials')).toHaveClass(/is-active/)
+  await page.keyboard.press('c')
+  await expect(page.getByTestId('compare-screen')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('overview-summary')).toBeVisible()
+  await expect(page.locator('[data-region="slots"]:focus')).toHaveCount(1)
 })

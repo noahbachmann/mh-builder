@@ -13,9 +13,7 @@ import WeaponTree from './components/center/WeaponTree.vue'
 import ArmorPicker from './components/center/ArmorPicker.vue'
 import CharmPicker from './components/center/CharmPicker.vue'
 import DecorationScreen from './components/center/DecorationScreen.vue'
-import CompareScreen from './components/center/CompareScreen.vue'
-import MaterialsScreen from './components/center/MaterialsScreen.vue'
-import BuildOverview from './components/center/BuildOverview.vue'
+import OverviewScreen from './components/center/OverviewScreen.vue'
 import HelpOverlay from './components/HelpOverlay.vue'
 import SkillInfobox from './components/base/SkillInfobox.vue'
 import MonsterList from './components/monsters/MonsterList.vue'
@@ -31,7 +29,7 @@ const VIEW_LABEL: Record<View, string> = { equipment: 'Equipment', monsters: 'Mo
 
 // leaving a screen ends any hover preview
 watch(
-  () => [ui.screen, ui.view],
+  () => [ui.screen, ui.overviewTab, ui.view],
   () => preview.clear(),
 )
 
@@ -116,9 +114,7 @@ onBeforeUnmount(() => uninstall?.())
         <ArmorPicker v-else-if="ui.screen === 'armor'" />
         <CharmPicker v-else-if="ui.screen === 'charm'" />
         <DecorationScreen v-else-if="ui.screen === 'decorations'" />
-        <CompareScreen v-else-if="ui.screen === 'compare'" />
-        <MaterialsScreen v-else-if="ui.screen === 'materials'" />
-        <BuildOverview v-else />
+        <OverviewScreen v-else />
       </div>
       <Sidebar class="right drawer-right" :class="{ 'is-open': ui.drawer === 'right' }" :inert="rightInert()" />
       <div v-if="ui.drawer" class="backdrop" data-testid="drawer-backdrop" @click="ui.closeDrawer()" />
