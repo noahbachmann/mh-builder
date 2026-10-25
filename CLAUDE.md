@@ -50,7 +50,7 @@ Everything is unlocked: every weapon and armor piece is available, and armor is 
 ## Architecture
 
 ```
-public/           favicon
+public/           favicon.svg + apple-touch-icon.png (great sword from MHW_Icons_SVG, recolored)
 scripts/
   import/         converts the raw data source into normalized JSON
   icons/          generates src/assets/icons/*.vue from the SVG icon set
