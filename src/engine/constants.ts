@@ -113,10 +113,10 @@ export const AMMO_SHOT_MULTIPLIER: Record<ShotAmmo, readonly number[]> = {
 }
 
 /**
- * LBG Rapid Fire: 2 extra rounds at 0.5x damage (Rapid Fire +1..+3; +4 has 1, not in the data).
+ * LBG Rapid Fire extra rounds per Rapid Fire level (recoil type +1..+4; data has +2 / +3 only), each at 0.5x damage.
  * Source: MoonBunnie & Deathcream "MHWI General Data Sheet" (bit.ly/MHWIGeneralDataSheet), "Light Bowgun".
  */
-export const RAPID_FIRE_EXTRA_ROUNDS = 2
+export const RAPID_FIRE_EXTRA_ROUNDS: Record<number, number> = { 1: 2, 2: 2, 3: 2, 4: 1 }
 export const RAPID_FIRE_EXTRA_MULTIPLIER = 0.5
 
 /** Element cap of bowgun elemental ammo: base ammo element x 1.57. Source: "MHWI Damage Formula", "Sources: Element Dmg". */

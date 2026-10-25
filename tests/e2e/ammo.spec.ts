@@ -3,16 +3,16 @@ import { BLACK_ACTINULA, DEFENDER_GS_1, id36 } from './helpers'
 
 const LBG = `1.${id36(BLACK_ACTINULA)}`
 
-test('selected equipment lists bowgun ammo: buffed first, then debuffed, then neutral', async ({ page }) => {
+test('selected equipment lists bowgun ammo in in-game order, Rapid Fire marked', async ({ page }) => {
   await page.goto(`/?b=${LBG}`)
   await page.getByTestId('slot-weapon').click()
   await page.getByTestId('tab-equipment').click()
   const rows = page.getByTestId('equipped-card').getByTestId('card-ammo-row')
-  await expect(rows.first()).toContainText('Water')
-  await expect(rows.first()).toContainText('Rapid Fire')
-  await expect(rows.first()).toHaveClass(/buffed/)
-  await expect(rows.filter({ hasText: 'Sticky 1' })).toHaveClass(/debuffed/)
-  await expect(rows.last()).not.toHaveClass(/buffed|debuffed/)
+  await expect(rows.first()).toContainText('Normal 1')
+  const water = rows.filter({ hasText: 'Water' })
+  await expect(water).toContainText('Rapid Fire')
+  await expect(water.getByTestId('card-ammo-rapid')).toHaveAttribute('data-rounds', '3')
+  await expect(rows.filter({ hasText: 'Sticky 1' }).getByTestId('card-ammo-rapid')).toHaveCount(0)
 })
 
 test('melee weapons have no ammo list or ammo section', async ({ page }) => {
@@ -37,6 +37,8 @@ test('damage output fires the best ammo by default; another ammo can be picked',
 
   const avg = page.getByTestId('damage-average').first()
   const best = await avg.textContent()
+  // best ammo only in the Best chip
+  await expect(page.getByTestId('ammo-chip').filter({ hasText: 'Water' })).toHaveCount(0)
   const normal3 = page.getByTestId('ammo-chip').filter({ hasText: 'Normal 3' })
   await normal3.click()
   await expect(normal3).toHaveAttribute('aria-pressed', 'true')

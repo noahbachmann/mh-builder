@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '../data'
 import type { AmmoSlot, Hitzone, Monster } from '../data/types'
-import { AMMO, ammoDamage, ammoTraits, rankAmmo, rapidFactor, traitGroup, weaponAmmo } from './ammo'
+import { AMMO, ammoDamage, ammoTraits, listAmmo, rapidFactor, rapidRounds, weaponAmmo } from './ammo'
 import { ammoChoices, damageTable, resolveAmmo, type DamageSettings } from './hitzone-damage'
 import type { BuildStats } from './evaluate'
 import type { SkillEffect } from './skill-effects'
@@ -57,6 +57,12 @@ describe('ammoDamage', () => {
     expect(rapid.hits).toBe(3)
   })
 
+  it('Rapid Fire rounds per level: +1..+3 fire 3, +4 fires 2', () => {
+    expect([1, 2, 3, 4].map((recoil) => rapidRounds(slot('normal2', { rapid: true, recoil })))).toEqual([3, 3, 3, 2])
+    expect(rapidFactor(slot('normal2', { rapid: true, recoil: 4 }))).toBe(1.5)
+    expect(rapidRounds(slot('normal2', { recoil: 2 }))).toBe(1)
+  })
+
   it('spread fires 7 pellets, pierce hits 3 / 4 / 5 times', () => {
     expect(ammoDamage(hbg(), slot('spread3'), pole(), 0, false).raw).toBeCloseTo(8 * 7 * 3.62 * 0.8)
     expect([AMMO.pierce1, AMMO.pierce2, AMMO.pierce3].map((d) => d.parts[0]!.count)).toEqual([3, 4, 5])
@@ -96,23 +102,11 @@ describe('ammo traits', () => {
     expect(ammoTraits(slot('spread1', { rapid: true, recoil: 4 })).debuffs).toEqual([])
   })
 
-  it('group = sign(buffs - debuffs)', () => {
-    expect(traitGroup(slot('normal2', { rapid: true }))).toBe(1)
-    expect(traitGroup(slot('normal2', { recoil: 4 }))).toBe(-1)
-    expect(traitGroup(slot('normal2', { recoil: 2, reload: 'normal' }))).toBe(0)
-    expect(traitGroup(slot('normal2', { recoil: 1, reload: 'very slow' }))).toBe(0)
-  })
-
-  it('rankAmmo: buffed, then debuffed, then neutral, each by damage', () => {
-    const order = rankAmmo(hbg(), [
-      slot('normal1', { recoil: 2, reload: 'normal' }),
-      slot('normal3', { recoil: 2, reload: 'normal' }),
-      slot('sticky1', { recoil: 4, reload: 'slow' }),
-      slot('normal1', { rapid: true, recoil: 2 }),
-      slot('recover1', { reload: 'fast' }),
-      slot('pierce3', { recoil: 1 }),
-    ]).map((r) => `${r.slot.ammo}:${r.group}`)
-    expect(order).toEqual(['pierce3:1', 'normal1:1', 'recover1:1', 'sticky1:-1', 'normal3:0', 'normal1:0'])
+  it('listAmmo: in-game order, support ammo without damage', () => {
+    const list = listAmmo(hbg(), [slot('recover1'), slot('water'), slot('pierce3'), slot('normal1'), slot('sticky1')])
+    expect(list.map((r) => r.slot.ammo)).toEqual(['normal1', 'pierce3', 'sticky1', 'recover1', 'water'])
+    expect(list.find((r) => r.slot.ammo === 'recover1')!.damage).toBe(0)
+    expect(list[0]!.damage).toBeCloseTo(10 * 3.62 * 0.45)
   })
 })
 
