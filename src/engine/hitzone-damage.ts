@@ -12,11 +12,11 @@
  */
 import type { Build } from './build'
 import type { DataIndex } from '../data'
-import type { Element, Hitzone, Monster } from '../data/types'
-import { AFFINITY_CAP, ELEMENT_SHARPNESS, RAW_SHARPNESS, WEAK_SPOT_HZV, damageType, tenderize } from './constants'
-import { elementAffinityFactor, rawAffinityFactor } from './efr'
+import type { AmmoKey, AmmoSlot, Element, Hitzone, Monster } from '../data/types'
+import { ammoDamage, isDamaging, isSustainable, type AmmoDamage } from './ammo'
+import { ELEMENT_SHARPNESS, RAW_SHARPNESS, damageType, tenderize } from './constants'
+import { elementAffinityFactor, hitAffinity, rawAffinityFactor } from './efr'
 import { evaluateBuild, type BuildStats } from './evaluate'
-import { skillEffect } from './skill-effects'
 import { skillLevels } from './skills'
 import { bestOf } from './build-compare'
 import { trueElement, type WeaponStats } from './weapon-stats'
@@ -92,11 +92,7 @@ export interface HitDamage {
 export function hitDamage(stats: WeaponStats, hitzone: Hitzone, wexLevel: number, opts: HitOptions): HitDamage {
   const baseHzv = hitzone[damageType(stats.weapon.type)]
   const rawHzv = opts.wounded ? tenderize(baseHzv) : baseHzv
-  const weakSpot = rawHzv >= WEAK_SPOT_HZV
-  const wex = skillEffect('weakness-exploit', wexLevel)
-  // wound bonus is "extra" on top of the weak-spot bonus: weak spots only (Fextralife "Weakness Exploit")
-  const bonus = weakSpot ? (wex?.affinity ?? 0) + (opts.wounded ? (wex?.woundAffinity ?? 0) : 0) : 0
-  const affinity = Math.max(-AFFINITY_CAP, Math.min(AFFINITY_CAP, stats.affinity + bonus))
+  const { affinity, weakSpot } = hitAffinity(stats.affinity, rawHzv, wexLevel, opts.wounded)
 
   const gunner = stats.sharpnessIndex < 0
   const sharp = gunner ? -1 : Math.min(opts.sharpnessIndex ?? stats.sharpnessIndex, stats.sharpnessIndex)
@@ -133,13 +129,15 @@ export interface DamageSettings {
   sharpnessIndex?: number | null
   /** apply Weakness Exploit per hitzone (default true) */
   weaknessExploit?: boolean
+  /** per build: bowgun ammo to fire (`mv` / sharpness ignored); null / missing = weapon raw x MV */
+  ammo?: (AmmoSlot | null)[]
 }
 
 export interface DamageRow extends ResolvedPart {
   wounded: boolean
   broken: boolean
   /** per build; null without weapon or when the part has no hitzone right now */
-  hits: (HitDamage | null)[]
+  hits: (HitDamage | AmmoDamage | null)[]
   /** indices of the builds with the highest total */
   best: number[]
 }
@@ -149,9 +147,13 @@ export function damageTable(m: Monster, builds: (BuildStats | null)[], s: Damage
   const wex = builds.map((b) => (b && s.weaknessExploit !== false ? (skillLevels(b.skills).get(WEX) ?? 0) : 0))
   return monsterParts(m, s.mode, s.broken).map((p) => {
     const wounded = s.wounded.has(p.part)
-    const hits = builds.map((b, i) =>
-      b?.weapon && p.hitzone ? hitDamage(b.weapon, p.hitzone, wex[i]!, { mv: s.mv, wounded, sharpnessIndex: s.sharpnessIndex }) : null,
-    )
+    const hits = builds.map((b, i) => {
+      if (!b?.weapon || !p.hitzone) return null
+      const ammo = s.ammo?.[i]
+      return ammo
+        ? ammoDamage(b.weapon, ammo, p.hitzone, wex[i]!, wounded)
+        : hitDamage(b.weapon, p.hitzone, wex[i]!, { mv: s.mv, wounded, sharpnessIndex: s.sharpnessIndex })
+    })
     return { ...p, wounded, broken: s.broken.has(p.part), hits, best: bestOf(hits.map((h) => h?.total ?? null)) }
   })
 }
@@ -170,4 +172,37 @@ export function weightedAverage(rows: DamageRow[], weights: Readonly<Record<stri
     }
     return total > 0 ? sum / total : null
   })
+}
+
+export interface AmmoChoice {
+  slot: AmmoSlot
+  /** weighted average damage per shot over the monster's parts */
+  average: number | null
+  sustainable: boolean
+}
+
+/**
+ * Every damaging ammo of a bowgun build with its weighted average on `m`: sustainable ammo (normal, pierce, spread,
+ * elemental) first, best first; the first entry is the default pick. `slots` from `weaponAmmo`.
+ */
+export function ammoChoices(
+  m: Monster,
+  build: BuildStats,
+  slots: AmmoSlot[],
+  s: DamageSettings,
+  weights: Readonly<Record<string, number>>,
+): AmmoChoice[] {
+  return slots
+    .filter((x) => isDamaging(x.ammo))
+    .map((slot) => ({
+      slot,
+      average: weightedAverage(damageTable(m, [build], { ...s, ammo: [slot] }), weights, 1)[0] ?? null,
+      sustainable: isSustainable(slot.ammo),
+    }))
+    .sort((a, b) => Number(b.sustainable) - Number(a.sustainable) || (b.average ?? -1) - (a.average ?? -1))
+}
+
+/** The picked ammo if the build's bowgun has it, else the best (first) choice; null for other weapons. */
+export function resolveAmmo(choices: AmmoChoice[], pick: AmmoKey | null | undefined): AmmoSlot | null {
+  return (pick && choices.find((c) => c.slot.ammo === pick)?.slot) || (choices[0]?.slot ?? null)
 }

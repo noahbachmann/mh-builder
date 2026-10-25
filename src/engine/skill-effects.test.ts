@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '../data'
-import { CONDITIONAL_SKILLS, CONDITION_CONFLICTS, UNMODELLED_DAMAGE_SKILLS, SKILL_EFFECTS, WEAK_SPOT_CONDITION, activeEffects, skillEffect, type SkillEffect } from './skill-effects'
+import { CONDITIONAL_SKILLS, CONDITION_CONFLICTS, UNMODELLED_DAMAGE_SKILLS, UNMODELLED_FOR, SKILL_EFFECTS, WEAK_SPOT_CONDITION, activeEffects, skillEffect, type SkillEffect } from './skill-effects'
 
 const pct = (m: number | undefined) => (m === undefined ? [] : [Math.round((m - 1) * 100)])
 
@@ -95,8 +95,16 @@ describe('skill effects table', () => {
   it('unmodelled damage skills exist in the data and are not in the table', () => {
     for (const id of Object.keys(UNMODELLED_DAMAGE_SKILLS)) {
       expect(db.skill.has(id), id).toBe(true)
-      expect(SKILL_EFFECTS[id], id).toBeUndefined()
+      // weapon-limited ones are in the table for the other weapons (Normal Shots: bowguns yes, bow no)
+      if (!UNMODELLED_FOR[id]) expect(SKILL_EFFECTS[id], id).toBeUndefined()
     }
+    for (const id of Object.keys(UNMODELLED_FOR)) expect(UNMODELLED_DAMAGE_SKILLS[id], id).toBeDefined()
+  })
+
+  it('ammo shot skills: Normal / Piercing 1.10 / 1.20, Spread 1.10 / 1.15', () => {
+    expect(SKILL_EFFECTS['normal-shots']).toEqual([{ ammo: 'normal', ammoMul: 1.1 }, { ammo: 'normal', ammoMul: 1.2 }])
+    expect(skillEffect('piercing-shots', 2)).toEqual({ ammo: 'pierce', ammoMul: 1.2 })
+    expect(skillEffect('spread-power-shots', 2)).toEqual({ ammo: 'spread', ammoMul: 1.15 })
   })
 
   it('Affinity Sliding is a +30% affinity condition', () => {

@@ -99,3 +99,25 @@ export function damageType(type: WeaponType): DamageType {
 export function tenderize(hzv: number): number {
   return Math.floor(0.75 * hzv + 25)
 }
+
+export type ShotAmmo = 'normal' | 'pierce' | 'spread'
+
+/**
+ * Normal / Piercing / Spread-Power Shots Lv1-2 raw multiplier on that bowgun ammo.
+ * Source: MoonBunnie & Deathcream "MHWI Damage Formula" (bit.ly/MHWIDamageFormula), "Sources: Attack".
+ */
+export const AMMO_SHOT_MULTIPLIER: Record<ShotAmmo, readonly number[]> = {
+  normal: [1.1, 1.2],
+  pierce: [1.1, 1.2],
+  spread: [1.1, 1.15],
+}
+
+/**
+ * LBG Rapid Fire: 2 extra rounds at 0.5x damage (Rapid Fire +1..+3; +4 has 1, not in the data).
+ * Source: MoonBunnie & Deathcream "MHWI General Data Sheet" (bit.ly/MHWIGeneralDataSheet), "Light Bowgun".
+ */
+export const RAPID_FIRE_EXTRA_ROUNDS = 2
+export const RAPID_FIRE_EXTRA_MULTIPLIER = 0.5
+
+/** Element cap of bowgun elemental ammo: base ammo element x 1.57. Source: "MHWI Damage Formula", "Sources: Element Dmg". */
+export const AMMO_ELEMENT_CAP = 1.57

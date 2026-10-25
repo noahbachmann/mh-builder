@@ -1,4 +1,4 @@
-import type { ElementOrStatus, SharpnessBar, Weapon } from '../data/types'
+import type { Element, ElementOrStatus, SharpnessBar, Weapon } from '../data/types'
 import { ELEMENTS } from '../data/types'
 import {
   AFFINITY_CAP,
@@ -12,6 +12,7 @@ import {
   NEB_MULTIPLIER,
   TRUE_CRIT_ELEMENT_MULTIPLIER,
   elementCap,
+  type ShotAmmo,
 } from './constants'
 import type { SkillEffect } from './skill-effects'
 
@@ -47,6 +48,31 @@ export interface WeaponStats {
   sharpnessIndex: number
   handicraft: number
   nonElementalBoost: boolean
+  /** bowguns: skill modifiers that only ammo uses */
+  ammo: AmmoModifiers | null
+}
+
+export interface AmmoModifiers {
+  /** raw multiplier per ammo group (Normal / Piercing / Spread Shots), missing = 1 */
+  shotMul: Partial<Record<ShotAmmo, number>>
+  /** element skills for elemental ammo: multiplier + flat DISPLAYED element */
+  element: Record<Element, { mul: number; flat: number }>
+}
+
+const isBowgun = (w: Weapon) => w.type === 'light-bowgun' || w.type === 'heavy-bowgun'
+
+function ammoModifiers(effects: SkillEffect[]): AmmoModifiers {
+  const shotMul: AmmoModifiers['shotMul'] = {}
+  const element = Object.fromEntries(ELEMENTS.map((el) => [el, { mul: 1, flat: 0 }])) as AmmoModifiers['element']
+  for (const e of effects) {
+    if (e.ammo && e.ammoMul) shotMul[e.ammo] = (shotMul[e.ammo] ?? 1) * e.ammoMul
+    for (const el of ELEMENTS)
+      if (e.element === el || e.element === 'all') {
+        element[el].mul *= e.elementMul ?? 1
+        element[el].flat += e.elementFlat ?? 0
+      }
+  }
+  return { shotMul, element }
 }
 
 const isElement = (t: ElementOrStatus) => (ELEMENTS as readonly string[]).includes(t)
@@ -149,6 +175,7 @@ export function computeWeaponStats(weapon: Weapon, effects: SkillEffect[]): Weap
     sharpnessIndex: sharpness ? topSharpness(sharpness) : -1,
     handicraft,
     nonElementalBoost,
+    ammo: isBowgun(weapon) ? ammoModifiers(effects) : null,
   }
 }
 
