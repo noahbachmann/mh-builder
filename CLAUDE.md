@@ -68,7 +68,7 @@ src/
     efr.ts            EFR / EFE
     tree-layout.ts    weapon tree -> node grid positions + edges
     hitzone-damage.ts damage per hit vs monster hitzones (states, broken, wounded, Weakness Exploit per part)
-    ammo.ts           bowgun ammo: damage per shot, firing traits, sidebar order, best-ammo pick
+    ammo.ts           bowgun ammo: damage per shot, firing traits, sidebar list, best-ammo pick
     build-codec.ts    build <-> URL string
     build-compare.ts  side-by-side comparison of several builds
     materials.ts      crafting materials: weapon path from scratch, build totals
@@ -127,7 +127,7 @@ All constants below must be verified against a trusted reference and covered by 
 - Element boosts are limited by the **element cap** (no verified Iceborne rule yet, see Open decisions).
 - Raw = base true raw x multipliers (NEB, Offensive Guard, Heroics) + flat bonuses (Fextralife: NEB is "based on the weapon's base raw"; see Open decisions).
 - Gunner weapons (bowguns, bow) have no sharpness; EFR uses multiplier 1.0 for that term.
-- **Bowgun ammo** (MoonBunnie & Deathcream Iceborne sheets: Weapon Attack Tables "Bowgun Ammo", General Data Sheet "Light Bowgun", Damage Formula "Bowgun Ele Ammo"; values in `engine/ammo.ts` / `constants.ts`): one shot = true raw x ammo base raw/100 x affinity factor x ammo skill x shot HZV, per hit, x hits. Normal 10/20/34; Pierce 7/7/9; Spread 6/7/8 x 3/5/7 pellets; elemental 8 raw + 22 element (Dragon 2 + 18); Slicing 6 x 5 on the sever hitzone at green sharpness; Sticky / Cluster / Wyvern ignore hitzones, cannot crit, add fixed fire. Elemental ammo element = min(22 x elem% + flat (true), 22 x 1.57) x element crit x true raw/100 x elemental HZV (scales with raw). Rapid Fire = 2 extra rounds at 0.5x (x2 per shot). Normal / Piercing Shots x1.10 / 1.20, Spread/Power Shots x1.10 / 1.15 (bowgun ammo only; still "not calculated" for the bow). Assumed: within critical range (1.0x; before 0.8x, beyond 0.1x), all pellets hit. Not modelled: reload / recoil timing, mods, deviation, status buildup, Special Ammo Boost, Artillery.
+- **Bowgun ammo** (MoonBunnie & Deathcream Iceborne sheets: Weapon Attack Tables "Bowgun Ammo", General Data Sheet "Light Bowgun", Damage Formula "Bowgun Ele Ammo"; values in `engine/ammo.ts` / `constants.ts`): one shot = true raw x ammo base raw/100 x affinity factor x ammo skill x shot HZV, per hit, x hits. Normal 10/20/34; Pierce 7/7/9; Spread 6/7/8 x 3/5/7 pellets; elemental 8 raw + 22 element (Dragon 2 + 18); Slicing 6 x 5 on the sever hitzone at green sharpness; Sticky / Cluster / Wyvern ignore hitzones, cannot crit, add fixed fire. Elemental ammo element = min(22 x elem% + flat (true), 22 x 1.57) x element crit x true raw/100 x elemental HZV (scales with raw). Rapid Fire = 2 extra rounds at 0.5x (x2 per shot; level +4 = 1 extra round, not in the data). Normal / Piercing Shots x1.10 / 1.20, Spread/Power Shots x1.10 / 1.15 (bowgun ammo only; still "not calculated" for the bow). Assumed: within critical range (1.0x; before 0.8x, beyond 0.1x), all pellets hit. Not modelled: reload / recoil timing, mods, deviation, status buildup, Special Ammo Boost, Artillery.
 
 ## UI
 
@@ -148,7 +148,7 @@ The sidebar holds about 90% of the information. It works like the in-game one: s
 Tabs:
 1. **Overall Stats**: totals for the whole build: attack, affinity, element/status, sharpness, elderseal, defense, elemental resistances, EFR/EFE.
 2. **Overall Skills**: every active skill with current level / max level pips, set bonuses (pieces equipped / required) and secret-skill cap raises.
-3. **Selected Equipment**: stats, slots, decorations and skills of the equipment in the currently selected slot. Bowguns also list their ammo (capacity, Rapid Fire / auto-reload / recoil / reload): buffed ammo first, then debuffed, then neutral, each by damage per shot of the weapon alone on a reference hitzone (shot 45, element 20).
+3. **Selected Equipment**: stats, slots, decorations and skills of the equipment in the currently selected slot. Bowguns also list their ammo in in-game order (capacity, Rapid Fire / auto-reload / recoil / reload; tooltip = damage per shot of the weapon alone on a reference hitzone, shot 45 / element 20). Blue arrows at the capacity mark Rapid Fire: one arrow = 2 rounds per shot, two = 3+ (every Rapid Fire ammo in the data fires 3).
 
 Hover / focus compare:
 - Hovering or focusing a candidate item (in a picker or the weapon tree) opens a **second window** in the **Selected Equipment** tab. It sits next to the first one: currently equipped item vs. hovered item. Values that differ are colored and get up/down indicators.
@@ -171,7 +171,7 @@ Header tabs "Equipment" / "Monsters" (`S` toggles; URL `?view=monsters&m=<slug>`
 - Left: large monsters (icon + name, search).
 - Center: field guide: render, ecology, description, traps, physiology (hitzones of the chosen state; broken variants as extra rows; weak spots >= 45 gold), ailments it inflicts.
 - Right tabs (`Q` / `E`): **Monster Info** (weakness stars incl. alternate forms; break/sever/flinch thresholds and extract colour, or parts from break/carve rewards where the source has no break data), **Damage Output**, **Loot** (LR / HR / MR sub-tabs via `A` / `D`, grouped by reward condition).
-- Damage Output: monster state chips (shared with the field guide), builds = current (can be switched off) + saved builds picked as chips (same selection as the comparison), sharpness override (capped at each weapon's top), motion value (melee / bow; bowguns fire ammo). Table: per part wounded / broken toggles and a weight (0-10, stepper buttons for keyboard use); one damage-per-hit column per build, best gold; weighted average + best part per build. Below the parts, "Skill conditions": every conditional skill of the shown builds (level per build column) with an on/off toggle; situational skills start off, Weakness Exploit starts on (applied per part, switching it off ignores it). Below that, "Ammo" (bowgun builds only): per build "Best · <ammo>" (default: the sustainable ammo, i.e. normal / pierce / spread / elemental, with the highest weighted average on this monster) plus a chip per damaging ammo with its average (limited ammo dashed); a pick stays across monsters, falls back to best if the weapon lacks it. Monster data (~700 kB) loads only when the page opens.
+- Damage Output: monster state chips (shared with the field guide), builds = current (can be switched off) + saved builds picked as chips (same selection as the comparison), sharpness override (capped at each weapon's top), motion value (melee / bow; bowguns fire ammo). Table: per part wounded / broken toggles and a weight (0-10, stepper buttons for keyboard use); one damage-per-hit column per build, best gold; weighted average + best part per build. Below the parts, "Skill conditions": every conditional skill of the shown builds (level per build column) with an on/off toggle; situational skills start off, Weakness Exploit starts on (applied per part, switching it off ignores it). Below that, "Ammo" (bowgun builds only): per build "Best · <ammo>" (default: the sustainable ammo, i.e. normal / pierce / spread / elemental, with the highest weighted average on this monster) plus a chip per other damaging ammo with its average (the best one only in the Best chip; limited ammo dashed); a pick stays across monsters, falls back to best if the weapon lacks it. Monster data (~700 kB) loads only when the page opens.
 
 ### Responsive layout
 
@@ -269,7 +269,7 @@ monster/<monster slug>                     (list icons from the wiki's "Large Mo
   - complete a full build using keyboard only
   - materials: card materials, checklist persisted per build, auto build name
   - monsters page: field guide, info, loot ranks, damage output toggles, deep link, keyboard only
-  - bowgun ammo: sidebar ammo order, best ammo by default, picking another ammo
+  - bowgun ammo: sidebar ammo order + Rapid Fire arrows, best ammo by default (not repeated), picking another ammo
   - responsive: phone drawers + tap-to-preview, no page overflow at 340px, tablet sidebar, lg columns
 
 Engine changes require unit tests. UI flow changes require updating the Playwright specs.

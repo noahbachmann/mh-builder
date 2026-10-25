@@ -65,15 +65,18 @@ const unmodelled = computed(() => {
 const BOWGUN_NOTE =
   'per shot of the chosen ammo, within critical range; pierce hits 3 / 4 / 5 times and elemental ammo 3 times (estimate, depends on monster size); every spread pellet hits; reload and recoil speed not counted'
 
-/** bowgun builds: ammo chips (Auto + every damaging ammo, best first) */
+/** bowgun builds: Best chip + every other damaging ammo (best one only in the Best chip) */
 const ammoRows = computed(() =>
   store.builds.flatMap((b, i) => {
     const a = store.ammoState[i]
     if (!a?.choices.length) return []
-    const picked = a.choices.some((c) => c.slot.ammo === a.picked) ? a.picked : null
-    return [{ id: b.id, name: b.id === 'current' ? 'Current' : b.name, choices: a.choices, picked, best: a.choices[0]!.slot.ammo }]
+    const [best, ...rest] = a.choices
+    // picking the best ammo by hand = Best chip
+    const picked = rest.some((c) => c.slot.ammo === a.picked) ? a.picked : null
+    return [{ id: b.id, name: b.id === 'current' ? 'Current' : b.name, choices: rest, picked, best: best! }]
   }),
 )
+const avgText = (v: number | null, digits?: number) => (v === null ? '—' : fmt(v, digits))
 
 /** what the per-hit number leaves out for each weapon type in the shown builds */
 const WEAPON_NOTES: Partial<Record<WeaponType, string>> = {
@@ -325,7 +328,7 @@ function onMv(e: Event) {
                 data-testid="ammo-auto"
                 @click="store.setAmmo(r.id, null)"
               >
-                Best · {{ AMMO[r.best].label }}
+                Best · {{ AMMO[r.best.slot.ammo].label }}<span class="faint avg">{{ avgText(r.best.average) }}</span>
               </button>
               <button
                 v-for="(c, j) in r.choices"
@@ -334,11 +337,11 @@ function onMv(e: Event) {
                 class="chip"
                 :class="{ 'is-active': r.picked === c.slot.ammo, limited: !c.sustainable }"
                 :aria-pressed="r.picked === c.slot.ammo"
-                :title="`${c.sustainable ? '' : 'Limited ammo · '}weighted average ${c.average === null ? '—' : fmt(c.average, 1)} per shot`"
+                :title="`${c.sustainable ? '' : 'Limited ammo · '}weighted average ${avgText(c.average, 1)} per shot`"
                 data-testid="ammo-chip"
                 @click="store.setAmmo(r.id, c.slot.ammo)"
               >
-                {{ AMMO[c.slot.ammo].label }}<span class="faint avg">{{ c.average === null ? '—' : fmt(c.average) }}</span>
+                {{ AMMO[c.slot.ammo].label }}<span class="faint avg">{{ avgText(c.average) }}</span>
               </button>
             </div>
           </td>

@@ -11,7 +11,7 @@
  * rounding, reload / recoil timing (not DPS), mods, status buildup, Special Ammo Boost / Artillery.
  */
 import type { DataIndex } from '../data'
-import type { AmmoKey, AmmoSlot, Element, Hitzone, ReloadSpeed, Weapon } from '../data/types'
+import { AMMO_KEYS, type AmmoKey, type AmmoSlot, type Element, type Hitzone, type ReloadSpeed, type Weapon } from '../data/types'
 import { AMMO_ELEMENT_CAP, RAPID_FIRE_EXTRA_MULTIPLIER, RAPID_FIRE_EXTRA_ROUNDS, RAW_SHARPNESS, tenderize, type ShotAmmo } from './constants'
 import { elementAffinityFactor, hitAffinity, rawAffinityFactor } from './efr'
 import type { HitDamage } from './hitzone-damage'
@@ -128,8 +128,11 @@ const SHOT_SKILL: Partial<Record<AmmoKind, ShotAmmo>> = { normal: 'normal', pier
 // slicing: "Calculated with Green sharpness"
 const GREEN = RAW_SHARPNESS[3]
 
-/** Rounds per shot as a damage factor: Rapid Fire adds 2 rounds at half damage. */
-export const rapidFactor = (slot: AmmoSlot) => (slot.rapid ? 1 + RAPID_FIRE_EXTRA_ROUNDS * RAPID_FIRE_EXTRA_MULTIPLIER : 1)
+/** Rounds fired per shot: 1, Rapid Fire adds 2 (+4: 1). */
+export const rapidRounds = (slot: AmmoSlot) => 1 + (slot.rapid ? (RAPID_FIRE_EXTRA_ROUNDS[slot.recoil ?? 0] ?? 2) : 0)
+
+/** Rounds per shot as a damage factor: extra Rapid Fire rounds at half damage. */
+export const rapidFactor = (slot: AmmoSlot) => 1 + (rapidRounds(slot) - 1) * RAPID_FIRE_EXTRA_MULTIPLIER
 
 export interface AmmoDamage extends HitDamage {
   ammo: AmmoKey
@@ -172,7 +175,7 @@ export function ammoDamage(stats: WeaponStats, slot: AmmoSlot, hitzone: Hitzone,
   element *= rapid
   return {
     ammo: slot.ammo,
-    hits: hits * (slot.rapid ? 1 + RAPID_FIRE_EXTRA_ROUNDS : 1),
+    hits: hits * rapidRounds(slot),
     raw,
     element,
     total: raw + element,
@@ -207,12 +210,6 @@ export function ammoTraits(slot: AmmoSlot): { buffs: AmmoTrait[]; debuffs: AmmoT
   return { buffs, debuffs }
 }
 
-/** 1 = buffed, -1 = debuffed, 0 = neutral (buffs and debuffs cancel out). */
-export function traitGroup(slot: AmmoSlot): 1 | -1 | 0 {
-  const { buffs, debuffs } = ammoTraits(slot)
-  return Math.sign(buffs.length - debuffs.length) as 1 | -1 | 0
-}
-
 export const RELOAD_LABEL: Record<ReloadSpeed, string> = { fast: 'Fast', normal: 'Normal', slow: 'Slow', 'very slow': 'Very slow' }
 
 /** Typical hitzone for ranking ammo without a monster: shot / sever 45 (weak spot), element 20. */
@@ -230,23 +227,20 @@ export const REFERENCE_HITZONE: Hitzone = {
   ko: 0,
 }
 
-export interface RankedAmmo {
+export interface ListedAmmo {
   slot: AmmoSlot
   def: AmmoDef
-  group: 1 | -1 | 0
   /** damage per shot on `REFERENCE_HITZONE` */
   damage: number
 }
 
-/** Sidebar order: buffed, then debuffed, then neutral; inside each group by damage on the reference hitzone. */
-export function rankAmmo(stats: WeaponStats, slots: AmmoSlot[]): RankedAmmo[] {
-  const order = { 1: 0, [-1]: 1, 0: 2 } as Record<number, number>
+/** Sidebar list: in-game (`AMMO_KEYS`) order, with damage per shot on the reference hitzone. */
+export function listAmmo(stats: WeaponStats, slots: AmmoSlot[]): ListedAmmo[] {
   return slots
     .map((slot) => ({
       slot,
       def: AMMO[slot.ammo],
-      group: traitGroup(slot),
       damage: isDamaging(slot.ammo) ? ammoDamage(stats, slot, REFERENCE_HITZONE, 0, false).total : 0,
     }))
-    .sort((a, b) => order[a.group]! - order[b.group]! || b.damage - a.damage)
+    .sort((a, b) => AMMO_KEYS.indexOf(a.slot.ammo) - AMMO_KEYS.indexOf(b.slot.ammo))
 }

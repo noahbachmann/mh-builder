@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ELEMENTS, db, type Armor, type Charm, type Decoration, type SkillRef, type Weapon } from '../../data'
-import { RELOAD_LABEL, TRAIT_LABEL, ammoTraits, applyHandicraft, computeWeaponStats, rankAmmo, weaponAmmo } from '../../engine'
+import { RELOAD_LABEL, TRAIT_LABEL, ammoTraits, applyHandicraft, computeWeaponStats, listAmmo, rapidRounds, weaponAmmo } from '../../engine'
 import { icons } from '../../icons'
 import { WEAPON_TYPE_LABEL, capitalize, elementLabel, fmt } from '../../format'
 import Icon from '../base/Icon.vue'
@@ -87,20 +87,21 @@ const setBonus = computed(() => {
   const bonusId = db.armorSet.get(c.item.setId)?.bonusId
   return bonusId ? db.setBonus.get(bonusId)?.name : null
 })
-/** bowgun ammo: buffed, debuffed, then neutral, by damage per shot of the weapon alone (no skills) */
+/** bowgun ammo in in-game order; damage per shot of the weapon alone (no skills) */
 const ammo = computed(() => {
   const c = props.card
   if (c?.kind !== 'weapon') return []
   const slots = weaponAmmo(c.item, db)
   if (!slots.length) return []
-  return rankAmmo(computeWeaponStats(c.item, []), slots).map((r) => {
+  return listAmmo(computeWeaponStats(c.item, []), slots).map((r) => {
     const { buffs, debuffs } = ammoTraits(r.slot)
     // recoil / reload not already named by a trait
     const rest = [
       !r.slot.rapid && !r.slot.autoReload && r.slot.recoil !== undefined && r.slot.recoil > 1 && r.slot.recoil < 4 ? `Recoil ${r.slot.recoil}` : null,
       r.slot.reload && r.slot.reload !== 'fast' && r.slot.reload !== 'very slow' ? `${RELOAD_LABEL[r.slot.reload]} reload` : null,
     ].filter(Boolean)
-    return { ...r, buffs: buffs.map((t) => TRAIT_LABEL[t]), debuffs: debuffs.map((t) => TRAIT_LABEL[t]), rest: rest.join(' · ') }
+    const rounds = rapidRounds(r.slot)
+    return { ...r, rounds, buffs: buffs.map((t) => TRAIT_LABEL[t]), debuffs: debuffs.map((t) => TRAIT_LABEL[t]), rest: rest.join(' · ') }
   })
 })
 
@@ -179,12 +180,26 @@ const baseBar = computed(() => {
           <li
             v-for="a in ammo"
             :key="a.slot.ammo"
-            :class="{ buffed: a.group > 0, debuffed: a.group < 0 }"
             :title="a.damage ? `≈ ${fmt(a.damage, 1)} damage per shot (weapon alone, on shot hitzone 45 / element 20)` : 'No damage'"
             data-testid="card-ammo-row"
           >
             <span class="ammo-name">{{ a.def.label }}</span>
-            <span class="num clip" title="Capacity">{{ a.slot.clip }}</span>
+            <span class="num clip">
+              <span title="Capacity">{{ a.slot.clip }}</span>
+              <svg
+                v-if="a.rounds > 1"
+                class="rapid"
+                :viewBox="a.rounds > 2 ? '0 0 8 11' : '0 0 8 6'"
+                :height="a.rounds > 2 ? 11 : 6"
+                width="8"
+                data-testid="card-ammo-rapid"
+                :data-rounds="a.rounds"
+              >
+                <title>Rapid Fire: {{ a.rounds }} rounds per shot</title>
+                <path d="M1 5.5 4 2.5 7 5.5" />
+                <path v-if="a.rounds > 2" d="M1 10 4 7 7 10" />
+              </svg>
+            </span>
             <span class="traits">
               <span v-for="t in a.buffs" :key="t" class="trait buff">{{ t }}</span>
               <span v-for="t in a.debuffs" :key="t" class="trait debuff">{{ t }}</span>
@@ -309,20 +324,23 @@ const baseBar = computed(() => {
 }
 .ammo li {
   display: grid;
-  grid-template-columns: minmax(64px, auto) 20px 1fr;
+  grid-template-columns: minmax(64px, auto) 28px 1fr;
   gap: 6px;
   align-items: baseline;
-  padding: 1px 0 1px 6px;
-  border-left: 2px solid transparent;
-}
-.ammo li.buffed {
-  border-left-color: var(--up);
-}
-.ammo li.debuffed {
-  border-left-color: var(--down);
+  padding: 1px 0;
 }
 .clip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   color: var(--gold);
+}
+.rapid {
+  fill: none;
+  stroke: var(--rapid);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .traits {
   display: flex;
