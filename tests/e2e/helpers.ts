@@ -6,6 +6,7 @@ export const DEFENDER_GS_1 = 2001
 export const DEFENDER_GS_2 = 2002
 export const RIMEGUARD_HELM_A = 1297 // slots [3, 2], Divine Blessing 2 + Coalescence 1
 export const CHALLENGER_JEWEL = 82 // size 2, Agitator 1
+export const BLACK_ACTINULA = 2954 // R12 LBG, Water Rapid Fire
 
 export const slotItem = (page: Page, slot: string) => page.getByTestId(`slot-${slot}`).getByTestId('slot-item')
 
