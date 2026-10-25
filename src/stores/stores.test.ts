@@ -4,6 +4,7 @@ import { nextTick } from 'vue'
 import { db } from '../data'
 import { shareUrlFor, useBuildStore } from './build'
 import { MAX_COMPARED, useCompareStore } from './compare'
+import { useMonsterStore } from './monster'
 import { usePreviewStore } from './preview'
 import { useSavedStore } from './saved'
 import { useUiStore } from './ui'
@@ -188,5 +189,33 @@ describe('compare store', () => {
     saved.save('Other', code(gs1.id))
     await nextTick()
     expect(c.selected).toEqual([preset.id])
+  })
+})
+
+describe('monster store', () => {
+  it('fires the best sustainable ammo per bowgun build; a pick overrides it until reset', async () => {
+    const lbg = db.data.weapons.find((w) => w.name === 'Defender Light Bowgun I')!
+    useBuildStore().equip('weapon', lbg.id)
+    const m = useMonsterStore()
+    await m.ensureLoaded()
+    m.select('rathalos')
+    const [state] = m.ammoState
+    expect(state!.choices.length).toBeGreaterThan(0)
+    expect(state!.fired?.ammo).toBe(state!.choices[0]!.slot.ammo)
+    expect(state!.choices[0]!.sustainable).toBe(true)
+
+    const other = state!.choices[state!.choices.length - 1]!.slot.ammo
+    m.setAmmo('current', other)
+    expect(m.ammoState[0]!.fired?.ammo).toBe(other)
+    m.setAmmo('current', null)
+    expect(m.ammoState[0]!.fired?.ammo).toBe(state!.choices[0]!.slot.ammo)
+  })
+
+  it('melee builds have no ammo', async () => {
+    useBuildStore().equip('weapon', gs1.id)
+    const m = useMonsterStore()
+    await m.ensureLoaded()
+    expect(m.ammoState[0]!.choices).toEqual([])
+    expect(m.ammoState[0]!.fired).toBeNull()
   })
 })

@@ -24,8 +24,8 @@ export default defineConfig({
         },
       },
     },
-    // data chunk is ~1.8 MB raw / ~145 kB gzip by design
-    chunkSizeWarningLimit: 2000,
+    // data chunk is ~2.1 MB raw / ~185 kB gzip by design (bowgun ammo configs: ~0.2 MB raw)
+    chunkSizeWarningLimit: 2200,
   },
   test: {
     environment: 'jsdom',

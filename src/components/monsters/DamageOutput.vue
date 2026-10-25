@@ -6,8 +6,11 @@ import {
   CONDITIONAL_SKILLS,
   CONDITION_CONFLICTS,
   SHARPNESS_COLORS,
+  AMMO,
   UNMODELLED_DAMAGE_SKILLS,
+  UNMODELLED_FOR,
   skillLevels,
+  type AmmoDamage,
   type DamageRow,
   type HitDamage,
 } from '../../engine'
@@ -29,7 +32,7 @@ const buildChips = computed(() => [
 ])
 
 // focus grid rows: settings first, part rows, then skill condition rows
-const ROW = { mode: 0, builds: 1, sharpness: 3, mv: 4, table: 10, skills: 200 } as const
+const ROW = { mode: 0, builds: 1, sharpness: 3, mv: 4, table: 10, skills: 200, ammo: 300 } as const
 
 /** every conditional skill in the shown builds, with its level per build (0 = build lacks it) */
 const skills = computed(() => {
@@ -47,13 +50,30 @@ const skills = computed(() => {
   }))
 })
 
-/** damage skills of the shown builds the calculation leaves out */
+/** damage skills of the shown builds the calculation leaves out (weapon-limited ones only for those weapons) */
 const unmodelled = computed(() => {
-  const levels = store.builds.map((b) => skillLevels(b.stats.skills))
+  const levels = store.builds.map((b) => {
+    const type = b.stats.weapon?.weapon.type
+    const all = skillLevels(b.stats.skills)
+    return new Map([...all].filter(([id]) => !UNMODELLED_FOR[id] || (type && UNMODELLED_FOR[id]!.includes(type))))
+  })
   return Object.entries(UNMODELLED_DAMAGE_SKILLS)
     .filter(([id]) => levels.some((l) => l.has(id)))
     .map(([id, note]) => ({ id, note, name: db.skill.get(id)?.name ?? id, levels: levels.map((l) => l.get(id) ?? 0) }))
 })
+
+const BOWGUN_NOTE =
+  'per shot of the chosen ammo, within critical range; pierce hits 3 / 4 / 5 times and elemental ammo 3 times (estimate, depends on monster size); every spread pellet hits; reload and recoil speed not counted'
+
+/** bowgun builds: ammo chips (Auto + every damaging ammo, best first) */
+const ammoRows = computed(() =>
+  store.builds.flatMap((b, i) => {
+    const a = store.ammoState[i]
+    if (!a?.choices.length) return []
+    const picked = a.choices.some((c) => c.slot.ammo === a.picked) ? a.picked : null
+    return [{ id: b.id, name: b.id === 'current' ? 'Current' : b.name, choices: a.choices, picked, best: a.choices[0]!.slot.ammo }]
+  }),
+)
 
 /** what the per-hit number leaves out for each weapon type in the shown builds */
 const WEAPON_NOTES: Partial<Record<WeaponType, string>> = {
@@ -66,8 +86,8 @@ const WEAPON_NOTES: Partial<Record<WeaponType, string>> = {
   'switch-axe': 'phial boosts in sword mode not included',
   'charge-blade': 'phial explosions and shield charge not included',
   'insect-glaive': 'extract buffs and kinsect damage not included',
-  'light-bowgun': "weapon raw only: ammo motion values, ammo element and critical distance not included",
-  'heavy-bowgun': "weapon raw only: ammo motion values, ammo element and critical distance not included",
+  'light-bowgun': BOWGUN_NOTE,
+  'heavy-bowgun': BOWGUN_NOTE,
   bow: 'arrow motion values, charge levels, coatings and critical distance not included',
 }
 const weaponNotes = computed(() => {
@@ -84,7 +104,9 @@ const bestPart = computed(() =>
   }),
 )
 
-function hint(h: HitDamage) {
+function hint(h: HitDamage | AmmoDamage) {
+  if ('ammo' in h)
+    return `${AMMO[h.ammo].label}: ${h.hits} hit${h.hits > 1 ? 's' : ''} · raw ${fmt(h.raw, 1)} + element ${fmt(h.element, 1)} · raw hitzone ${h.rawHzv}${h.weakSpot ? ' (weak spot)' : ''} · affinity ${fmt(h.affinity)}%`
   return `Raw ${fmt(h.raw, 1)} + element ${fmt(h.element, 1)} · raw hitzone ${h.rawHzv}${h.weakSpot ? ' (weak spot)' : ''} · affinity ${fmt(h.affinity)}%`
 }
 
@@ -168,7 +190,7 @@ function onMv(e: Event) {
           data-testid="damage-mv"
           @change="onMv"
         />
-        <span class="faint hint">100 = one hit worth the weapon's raw</span>
+        <span class="faint hint">100 = one hit worth the weapon's raw; bowguns fire their ammo instead</span>
       </label>
     </div>
 
@@ -286,6 +308,42 @@ function onMv(e: Event) {
           <td v-for="(lv, j) in c.levels" :key="j" class="num" :class="{ faint: !lv }">{{ lv ? `Lv ${lv}` : '—' }}</td>
         </tr>
       </tbody>
+      <tbody v-if="ammoRows.length" data-testid="damage-ammo">
+        <tr class="section">
+          <th :colspan="4 + store.builds.length">Ammo</th>
+        </tr>
+        <tr v-for="(r, i) in ammoRows" :key="r.id" data-testid="damage-ammo-build">
+          <th>{{ r.name }}</th>
+          <td :colspan="3 + store.builds.length" class="ammo-cell">
+            <div class="ammo-chips">
+              <button
+                v-focus-cell="{ region: 'damage', row: ROW.ammo + i, col: 0 }"
+                class="chip"
+                :class="{ 'is-active': r.picked === null }"
+                :aria-pressed="r.picked === null"
+                title="Best sustainable ammo (normal, pierce, spread, elemental) for this monster"
+                data-testid="ammo-auto"
+                @click="store.setAmmo(r.id, null)"
+              >
+                Best · {{ AMMO[r.best].label }}
+              </button>
+              <button
+                v-for="(c, j) in r.choices"
+                :key="c.slot.ammo"
+                v-focus-cell="{ region: 'damage', row: ROW.ammo + i, col: j + 1 }"
+                class="chip"
+                :class="{ 'is-active': r.picked === c.slot.ammo, limited: !c.sustainable }"
+                :aria-pressed="r.picked === c.slot.ammo"
+                :title="`${c.sustainable ? '' : 'Limited ammo · '}weighted average ${c.average === null ? '—' : fmt(c.average, 1)} per shot`"
+                data-testid="ammo-chip"
+                @click="store.setAmmo(r.id, c.slot.ammo)"
+              >
+                {{ AMMO[c.slot.ammo].label }}<span class="faint avg">{{ c.average === null ? '—' : fmt(c.average) }}</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
       <tbody v-if="unmodelled.length" data-testid="damage-unmodelled">
         <tr class="section">
           <th :colspan="4 + store.builds.length">Not included in the calculation</th>
@@ -306,7 +364,7 @@ function onMv(e: Event) {
     </ul>
 
     <p class="note faint">
-      Damage per hit at the chosen motion value: raw × sharpness × affinity × MV × hitzone, plus element. Weakness Exploit applies per part
+      Damage per hit at the chosen motion value: raw × sharpness × affinity × MV × hitzone, plus element (bowguns: per shot of their ammo). Weakness Exploit applies per part
       (raw hitzone ≥ 45 after wounding, plus its extra bonus when such a part is wounded). Wounding sets the raw hitzone to 0.75 × hitzone + 25. Not included: monster
       defense rate, rounding, statuses, weapon-specific mechanics. Elemental hitzones stay the same when wounded. Not DPS: no attack
       timings in the data.
@@ -464,6 +522,24 @@ tr.gone td {
 .cond {
   font-size: 11px;
   white-space: nowrap;
+}
+.ammo-cell {
+  padding: 4px !important;
+}
+.ammo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.ammo-chips .chip {
+  font-size: 11px;
+}
+.ammo-chips .limited {
+  border-style: dashed;
+}
+.avg {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
 }
 .unmodelled th {
   color: var(--text-dim);

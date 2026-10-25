@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ELEMENTS, db, type Armor, type Charm, type Decoration, type SkillRef, type Weapon } from '../../data'
-import { applyHandicraft } from '../../engine'
+import { RELOAD_LABEL, TRAIT_LABEL, ammoTraits, applyHandicraft, computeWeaponStats, rankAmmo, weaponAmmo } from '../../engine'
 import { icons } from '../../icons'
 import { WEAPON_TYPE_LABEL, capitalize, elementLabel, fmt } from '../../format'
 import Icon from '../base/Icon.vue'
@@ -87,6 +87,23 @@ const setBonus = computed(() => {
   const bonusId = db.armorSet.get(c.item.setId)?.bonusId
   return bonusId ? db.setBonus.get(bonusId)?.name : null
 })
+/** bowgun ammo: buffed, debuffed, then neutral, by damage per shot of the weapon alone (no skills) */
+const ammo = computed(() => {
+  const c = props.card
+  if (c?.kind !== 'weapon') return []
+  const slots = weaponAmmo(c.item, db)
+  if (!slots.length) return []
+  return rankAmmo(computeWeaponStats(c.item, []), slots).map((r) => {
+    const { buffs, debuffs } = ammoTraits(r.slot)
+    // recoil / reload not already named by a trait
+    const rest = [
+      !r.slot.rapid && !r.slot.autoReload && r.slot.recoil !== undefined && r.slot.recoil > 1 && r.slot.recoil < 4 ? `Recoil ${r.slot.recoil}` : null,
+      r.slot.reload && r.slot.reload !== 'fast' && r.slot.reload !== 'very slow' ? `${RELOAD_LABEL[r.slot.reload]} reload` : null,
+    ].filter(Boolean)
+    return { ...r, buffs: buffs.map((t) => TRAIT_LABEL[t]), debuffs: debuffs.map((t) => TRAIT_LABEL[t]), rest: rest.join(' · ') }
+  })
+})
+
 const baseBar = computed(() => {
   const c = props.card
   return c?.kind === 'weapon' && c.item.sharpness ? applyHandicraft(c.item.sharpness, 0, c.item.sharpnessMaxed) : null
@@ -155,6 +172,27 @@ const baseBar = computed(() => {
         </template>
       </dl>
       <div v-if="baseBar" class="bar"><SharpnessBar :bar="baseBar" :full="card.kind === 'weapon' ? card.item.sharpness : null" /></div>
+
+      <template v-if="ammo.length">
+        <div class="label">Ammo</div>
+        <ul class="ammo" data-testid="card-ammo">
+          <li
+            v-for="a in ammo"
+            :key="a.slot.ammo"
+            :class="{ buffed: a.group > 0, debuffed: a.group < 0 }"
+            :title="a.damage ? `≈ ${fmt(a.damage, 1)} damage per shot (weapon alone, on shot hitzone 45 / element 20)` : 'No damage'"
+            data-testid="card-ammo-row"
+          >
+            <span class="ammo-name">{{ a.def.label }}</span>
+            <span class="num clip" title="Capacity">{{ a.slot.clip }}</span>
+            <span class="traits">
+              <span v-for="t in a.buffs" :key="t" class="trait buff">{{ t }}</span>
+              <span v-for="t in a.debuffs" :key="t" class="trait debuff">{{ t }}</span>
+              <span v-if="a.rest" class="faint">{{ a.rest }}</span>
+            </span>
+          </li>
+        </ul>
+      </template>
 
       <dl v-if="card.kind === 'armor'" class="stat-list">
         <dt>Defense</dt>
@@ -262,5 +300,40 @@ const baseBar = computed(() => {
 }
 .setb {
   padding: 0 8px;
+}
+.ammo {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px;
+  font-size: 12px;
+}
+.ammo li {
+  display: grid;
+  grid-template-columns: minmax(64px, auto) 20px 1fr;
+  gap: 6px;
+  align-items: baseline;
+  padding: 1px 0 1px 6px;
+  border-left: 2px solid transparent;
+}
+.ammo li.buffed {
+  border-left-color: var(--up);
+}
+.ammo li.debuffed {
+  border-left-color: var(--down);
+}
+.clip {
+  color: var(--gold);
+}
+.traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  font-size: 11px;
+}
+.buff {
+  color: var(--up);
+}
+.debuff {
+  color: var(--down);
 }
 </style>

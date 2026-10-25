@@ -2,8 +2,18 @@ import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
 import { db } from '../data'
 import { loadMonsters, type MonsterIndex } from '../data/monsters'
-import type { Rank } from '../data/types'
-import { CONDITION_CONFLICTS, damageTable, defaultMode, evaluateForMonster, weightedAverage } from '../engine'
+import type { AmmoKey, Rank } from '../data/types'
+import {
+  CONDITION_CONFLICTS,
+  ammoChoices,
+  damageTable,
+  defaultMode,
+  evaluateForMonster,
+  resolveAmmo,
+  weaponAmmo,
+  weightedAverage,
+  type DamageSettings,
+} from '../engine'
 import { useCompareStore } from './compare'
 import { useUiStore } from './ui'
 
@@ -43,6 +53,8 @@ export const useMonsterStore = defineStore('monster', () => {
   const conditions = ref(new Set<string>(['weakness-exploit']))
   /** include the equipped build as a column */
   const includeCurrent = ref(true)
+  /** bowgun ammo picked per build id; missing = best for the monster */
+  const ammo = ref<Record<string, AmmoKey>>({})
 
   const monsters = computed(() => index.value?.data.monsters ?? [])
   const monster = computed(() => (index.value && slug.value ? (index.value.bySlug.get(slug.value) ?? null) : null))
@@ -115,6 +127,14 @@ export const useMonsterStore = defineStore('monster', () => {
     weights.value = { ...weights.value, [part]: Math.max(0, Math.min(MAX_WEIGHT, Math.round(w))) }
   }
 
+  /** null = back to the best ammo */
+  function setAmmo(buildId: string, key: AmmoKey | null) {
+    const next = { ...ammo.value }
+    if (key) next[buildId] = key
+    else delete next[buildId]
+    ammo.value = next
+  }
+
   function cycleTab(step: 1 | -1) {
     const i = MONSTER_TABS.indexOf(tab.value)
     tab.value = MONSTER_TABS[(i + step + MONSTER_TABS.length) % MONSTER_TABS.length]!
@@ -132,19 +152,30 @@ export const useMonsterStore = defineStore('monster', () => {
       .filter((c) => includeCurrent.value || c.id !== 'current')
       .map((c) => ({ id: c.id, name: c.name, stats: evaluateForMonster(c.build, db, conditions.value) })),
   )
+  const settings = computed<DamageSettings>(() => ({
+    mode: mode.value,
+    broken: broken.value,
+    wounded: wounded.value,
+    mv: mv.value,
+    sharpnessIndex: sharpness.value,
+    weaknessExploit: conditions.value.has('weakness-exploit'),
+  }))
+  /** per build: damaging ammo with averages (empty for non-bowguns) and the ammo fired */
+  const ammoState = computed(() =>
+    builds.value.map((b) => {
+      const m = monster.value
+      const slots = weaponAmmo(b.stats.weapon?.weapon, db)
+      const choices = m && slots.length ? ammoChoices(m, b.stats, slots, settings.value, weights.value) : []
+      const picked = ammo.value[b.id] ?? null
+      return { choices, picked, fired: resolveAmmo(choices, picked) }
+    }),
+  )
   const rows = computed(() =>
     monster.value
       ? damageTable(
           monster.value,
           builds.value.map((b) => b.stats),
-          {
-            mode: mode.value,
-            broken: broken.value,
-            wounded: wounded.value,
-            mv: mv.value,
-            sharpnessIndex: sharpness.value,
-            weaknessExploit: conditions.value.has('weakness-exploit'),
-          },
+          { ...settings.value, ammo: ammoState.value.map((a) => a.fired) },
         )
       : [],
   )
@@ -166,6 +197,8 @@ export const useMonsterStore = defineStore('monster', () => {
     sharpness,
     conditions,
     includeCurrent,
+    ammo,
+    ammoState,
     builds,
     rows,
     averages,
@@ -176,6 +209,7 @@ export const useMonsterStore = defineStore('monster', () => {
     toggleCondition,
     weight,
     setWeight,
+    setAmmo,
     cycleTab,
     cycleRank,
   }
