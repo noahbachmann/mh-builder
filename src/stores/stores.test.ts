@@ -108,7 +108,7 @@ describe('saved store', () => {
   it('finds saved builds and presets by id; presets are not saved builds', () => {
     const s = useSavedStore()
     const b = s.save('Mine', '1.abc')
-    const preset = s.presets.find((p) => p.name === 'IB LS late game')!
+    const preset = s.presets.find((p) => p.name === 'LS IB late game')!
     expect(preset.id).toBe('preset:ib-ls-late')
     expect(s.find(preset.id)).toEqual(preset)
     expect(s.find(b.id)?.name).toBe('Mine')

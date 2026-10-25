@@ -205,7 +205,7 @@ Usable from 340px. Breakpoints in `src/composables/useBreakpoint.ts` (`BREAKPOIN
 ### Preset builds
 
 - Builds panel tabs "Saved" / "Presets" (focus cells, tab remembered in localStorage `mhw-builder.builds-tab`).
-- Presets live in `src/data/presets.ts` (hand-written, items by **name**; names are unique per data file), grouped Iceborne late game / Base game late game / Early & mid game. Names follow `<IB|Base> <weapon abbr> <stage>[ (flavour)]`, e.g. `IB LS late game`, `Base DB late game (element)`, `IB GS mid game (MR)`; `note` = armor + key skills. Base game builds use HR armor and size 1–3 jewels only.
+- Presets live in `src/data/presets.ts` (hand-written, items by **name**; names are unique per data file), grouped Iceborne late game / Base game late game / Early & mid game. Names follow `<weapon abbr> <IB|base> <stage>[ (flavour)]`, e.g. `LS IB late game`, `DB base late game (element)`, `GS IB mid game (MR)`; `note` = armor + key skills. Base game builds use HR armor and size 1–3 jewels only.
 - Rows: load (same "Load equipment?" dialog) + "Link". Compared through the Compare "+" picker (ids `preset:<slug>`, so they also show as Damage Output chips while selected). No overwrite / delete; materials: load the preset first.
 - `engine/presets.test.ts` checks every preset resolves (no missing name, no deco dropped), no skill points over the cap, max 40.
 - Weapon tree screen:
