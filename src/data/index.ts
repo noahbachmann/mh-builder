@@ -1,4 +1,4 @@
-import type { Armor, ArmorSet, Charm, Decoration, GameData, SetBonus, Skill, Weapon } from './types'
+import type { AmmoConfig, Armor, ArmorSet, Charm, Decoration, GameData, SetBonus, Skill, Weapon } from './types'
 import weapons from './weapons.json'
 import armor from './armor.json'
 import armorSets from './armor-sets.json'
@@ -6,6 +6,7 @@ import setBonuses from './set-bonuses.json'
 import charms from './charms.json'
 import decorations from './decorations.json'
 import skills from './skills.json'
+import ammoConfigs from './ammo-configs.json'
 
 export * from './types'
 
@@ -17,6 +18,7 @@ export const gameData: GameData = {
   charms: charms as Charm[],
   decorations: decorations as Decoration[],
   skills: skills as Skill[],
+  ammoConfigs: ammoConfigs as AmmoConfig[],
 }
 
 /** id lookups over a dataset; engine functions take this so tests can pass fixtures */
@@ -29,6 +31,7 @@ export interface DataIndex {
   charm: Map<number, Charm>
   decoration: Map<number, Decoration>
   skill: Map<string, Skill>
+  ammoConfig: Map<string, AmmoConfig>
 }
 
 export function indexData(data: GameData): DataIndex {
@@ -42,6 +45,7 @@ export function indexData(data: GameData): DataIndex {
     charm: byId(data.charms),
     decoration: byId(data.decorations),
     skill: byId(data.skills),
+    ammoConfig: byId(data.ammoConfigs),
   }
 }
 

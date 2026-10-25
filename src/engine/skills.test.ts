@@ -48,6 +48,7 @@ const data: GameData = {
     { id: 2, name: 'Expert', size: 1, rarity: 5, skills: [{ skillId: 'critical-eye', level: 1 }] },
   ],
   weapons: [],
+  ammoConfigs: [],
 }
 const db = indexData(data)
 
