@@ -1,6 +1,8 @@
 import { join } from 'node:path'
 import { readCsv, type Row } from './csv.ts'
 import type {
+  AmmoConfig,
+  AmmoSlot,
   Armor,
   ArmorSet,
   ArmorType,
@@ -26,8 +28,9 @@ import type {
   Weapon,
   WeaponElement,
   WeaponType,
+  ReloadSpeed,
 } from '../../src/data/types.ts'
-import { MONSTER_STAR_KEYS } from '../../src/data/types.ts'
+import { AMMO_KEYS, MONSTER_STAR_KEYS } from '../../src/data/types.ts'
 
 export function slug(name: string): string {
   return name
@@ -275,10 +278,30 @@ export function normalize(src: string): NormalizeResult {
         w.elementalAmmo = ELEMENTAL_AMMO.some((k) => int(a[`${k}_clip`]) > 0)
         w.deviation = a.deviation
         if (a.special) w.specialAmmo = a.special
+        w.ammoConfig = r.ammo_config
       } else warnings.push(`weapon ${r.name_en}: unknown ammo config "${r.ammo_config}"`)
     }
     return w
   })
+
+  // only configs some weapon uses
+  const usedConfigs = new Set(weapons.flatMap((w) => (w.ammoConfig ? [w.ammoConfig] : [])))
+  const ammoConfigs: AmmoConfig[] = [...ammo.values()]
+    .filter((a) => usedConfigs.has(a.key!))
+    .map((a) => ({
+      id: a.key!,
+      slots: AMMO_KEYS.flatMap((k): AmmoSlot[] => {
+        const clip = int(a[`${k}_clip`])
+        if (clip <= 0) return []
+        const s: AmmoSlot = { ammo: k, clip }
+        if (bool(a[`${k}_rapid`])) s.rapid = true
+        const recoil = a[`${k}_recoil`]
+        if (recoil === '-1') s.autoReload = true
+        else if (recoil) s.recoil = int(recoil)
+        if (a[`${k}_reload`]) s.reload = a[`${k}_reload`] as ReloadSpeed
+        return [s]
+      }),
+    }))
 
   // --- items (only those monster rewards and recipes use)
   const itemRows = new Map(csv('items/item_base.csv').map((r) => [r.name_en!, r]))
@@ -424,6 +447,7 @@ export function normalize(src: string): NormalizeResult {
       charms,
       decorations,
       skills,
+      ammoConfigs,
       monsters,
       items: [...items.values()].sort((a, b) => a.id - b.id),
       crafting: recipes,

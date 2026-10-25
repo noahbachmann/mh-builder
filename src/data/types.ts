@@ -83,6 +83,38 @@ export interface Weapon {
   elementalAmmo?: boolean
   deviation?: string
   specialAmmo?: string
+  /** bowguns: `AmmoConfig.id` (configs are shared by many bowguns) */
+  ammoConfig?: string
+}
+
+/** Bowgun ammo types in source (in-game list) order. */
+export const AMMO_KEYS = [
+  'normal1', 'normal2', 'normal3', 'pierce1', 'pierce2', 'pierce3', 'spread1', 'spread2', 'spread3',
+  'sticky1', 'sticky2', 'sticky3', 'cluster1', 'cluster2', 'cluster3', 'recover1', 'recover2',
+  'poison1', 'poison2', 'paralysis1', 'paralysis2', 'sleep1', 'sleep2', 'exhaust1', 'exhaust2',
+  'flaming', 'water', 'freeze', 'thunder', 'dragon', 'slicing', 'wyvern', 'demon', 'armor', 'tranq',
+] as const
+export type AmmoKey = (typeof AMMO_KEYS)[number]
+export type ReloadSpeed = 'fast' | 'normal' | 'slow' | 'very slow'
+
+/** One loadable ammo of a bowgun. */
+export interface AmmoSlot {
+  ammo: AmmoKey
+  /** capacity per load */
+  clip: number
+  /** LBG Rapid Fire (`recoil` then is the Rapid Fire level) */
+  rapid?: true
+  /** fires and reloads by itself (source recoil -1) */
+  autoReload?: true
+  /** recoil level 1-4, lower is better; missing for auto-reload and wyvern ammo */
+  recoil?: number
+  reload?: ReloadSpeed
+}
+
+export interface AmmoConfig {
+  id: string
+  /** usable ammo only (capacity > 0), in AMMO_KEYS order */
+  slots: AmmoSlot[]
 }
 
 export interface ElementalResistances {
@@ -165,6 +197,7 @@ export interface GameData {
   charms: Charm[]
   decorations: Decoration[]
   skills: Skill[]
+  ammoConfigs: AmmoConfig[]
 }
 
 export const MONSTER_STAR_KEYS = [...ELEMENTS, ...STATUSES, 'stun'] as const
