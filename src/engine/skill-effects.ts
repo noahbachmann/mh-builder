@@ -7,8 +7,8 @@
  *
  * `conditional` effects only apply when their condition is switched on (`EffectOptions`).
  */
-import type { Element, ElementalResistances, Status } from '../data/types'
-import { CRIT_BOOST_MULTIPLIER } from './constants'
+import type { Element, ElementalResistances, Status, WeaponType } from '../data/types'
+import { AMMO_SHOT_MULTIPLIER, CRIT_BOOST_MULTIPLIER, type ShotAmmo } from './constants'
 
 export interface SkillEffect {
   /** flat true raw */
@@ -35,6 +35,9 @@ export interface SkillEffect {
   defenseFlat?: number
   defenseMul?: number
   resistances?: Partial<ElementalResistances>
+  /** raw multiplier on one bowgun ammo group (Normal / Piercing / Spread Shots; not applied to bow arrows) */
+  ammoMul?: number
+  ammo?: ShotAmmo
   /** short label of the condition; present => conditional */
   conditional?: string
 }
@@ -65,6 +68,9 @@ const resistance = (key: keyof ElementalResistances) => [
   { resistances: { [key]: 12 } },
   { resistances: { [key]: 20 }, defenseFlat: 10 },
 ]
+
+// skill text has no numbers: values from constants (MoonBunnie & Deathcream)
+const ammoShots = (ammo: ShotAmmo) => AMMO_SHOT_MULTIPLIER[ammo].map((ammoMul) => ({ ammo, ammoMul }))
 
 const allRes = (n: number): ElementalResistances => ({ fire: n, water: n, thunder: n, ice: n, dragon: n })
 
@@ -142,6 +148,9 @@ export const SKILL_EFFECTS: Table = {
   'paralysis-attack': statusAttack('paralysis'),
   'sleep-attack': statusAttack('sleep'),
   'blast-attack': statusAttack('blast'),
+  'normal-shots': ammoShots('normal'),
+  'piercing-shots': ammoShots('pierce'),
+  'spread-power-shots': ammoShots('spread'),
   'defense-boost': [
     { defenseFlat: 5 },
     { defenseFlat: 10 },
@@ -196,12 +205,19 @@ export const UNMODELLED_DAMAGE_SKILLS: Readonly<Record<string, string>> = {
   'element-conversion': 'element up from armor resistances',
   'critical-status': 'status on crits (status not calculated)',
   'true-critical-status': 'status on crits (status not calculated)',
-  'normal-shots': 'ammo / arrow type only',
-  'piercing-shots': 'ammo / arrow type only',
-  'spread-power-shots': 'ammo / arrow type only',
+  'normal-shots': 'arrow type only',
+  'piercing-shots': 'arrow type only',
+  'spread-power-shots': 'arrow type only',
   'special-ammo-boost': 'special ammo only',
   artillery: 'shelling, phials, Wyvern\'s Fire',
   'heavy-artillery': 'siege weapons only',
+}
+
+/** Unmodelled only for these weapon types (bowgun ammo is calculated, bow arrows aren't). */
+export const UNMODELLED_FOR: Readonly<Record<string, readonly WeaponType[]>> = {
+  'normal-shots': ['bow'],
+  'piercing-shots': ['bow'],
+  'spread-power-shots': ['bow'],
 }
 
 /** Conditions that can't hold together: Peak Performance needs full health, Heroics / Resentment low or red health. */

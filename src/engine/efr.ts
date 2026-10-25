@@ -1,4 +1,5 @@
-import { ELEMENT_SHARPNESS, NEGATIVE_CRIT_MULTIPLIER, RAW_SHARPNESS } from './constants'
+import { AFFINITY_CAP, ELEMENT_SHARPNESS, NEGATIVE_CRIT_MULTIPLIER, RAW_SHARPNESS, WEAK_SPOT_HZV } from './constants'
+import { skillEffect } from './skill-effects'
 import { trueElement, type WeaponStats } from './weapon-stats'
 import type { ElementOrStatus } from '../data/types'
 
@@ -31,6 +32,17 @@ export function rawAffinityFactor(affinity: number, critMultiplier: number): num
 /** Expected element multiplier from affinity (%): element crit only on positive affinity. */
 export function elementAffinityFactor(affinity: number, critElementMultiplier: number): number {
   return 1 + (Math.max(0, affinity) / 100) * (critElementMultiplier - 1)
+}
+
+/**
+ * Affinity on one hitzone: base affinity + Weakness Exploit on weak spots (raw HZV >= 45, already tenderized
+ * when wounded), plus its wound bonus on wounded weak spots only (Fextralife "Weakness Exploit"). Capped.
+ */
+export function hitAffinity(base: number, rawHzv: number, wexLevel: number, wounded: boolean): { affinity: number; weakSpot: boolean } {
+  const weakSpot = rawHzv >= WEAK_SPOT_HZV
+  const wex = skillEffect('weakness-exploit', wexLevel)
+  const bonus = weakSpot ? (wex?.affinity ?? 0) + (wounded ? (wex?.woundAffinity ?? 0) : 0) : 0
+  return { affinity: Math.max(-AFFINITY_CAP, Math.min(AFFINITY_CAP, base + bonus)), weakSpot }
 }
 
 /** EFR = true raw x raw sharpness x (1 + affinity x (crit - 1)); gunners use sharpness 1.0. */
