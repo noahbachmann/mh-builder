@@ -10,7 +10,7 @@ export type PresetGroup = 'iceborne' | 'base' | 'progression'
 export interface PresetDef {
   /** slug, unique; the preset's id is `preset:<slug>` */
   slug: string
-  /** short descriptive name, e.g. "IB LS late game" */
+  /** short descriptive name, e.g. "LS IB late game" */
   name: string
   group: PresetGroup
   /** key skills / armor, shown under the name */

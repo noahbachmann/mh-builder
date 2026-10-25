@@ -98,7 +98,7 @@ export const PRESETS: PresetDef[] = [
   // ── Iceborne late game ──
   {
     slug: 'ib-gs-late',
-    name: 'IB GS late game',
+    name: 'GS IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Agitator / WEX / Crit Boost',
     items: { weapon: 'Black Fatalis Blade', ...IB_RAW_ARMOR },
@@ -106,7 +106,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-ls-late',
-    name: 'IB LS late game',
+    name: 'LS IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Agitator / WEX / Crit Boost',
     items: { weapon: 'Fatalis Zaggespanon', ...IB_RAW_ARMOR },
@@ -114,7 +114,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-sns-late',
-    name: 'IB SnS late game',
+    name: 'SnS IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Agitator / WEX / Crit Boost',
     items: { weapon: 'True Fatalis Sword', ...IB_RAW_ARMOR },
@@ -122,7 +122,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-db-late-element',
-    name: 'IB DB late game (element)',
+    name: 'DB IB late game (element)',
     group: 'iceborne',
     note: 'Alatreon blades, Silver Sol True Crit Element, Dragon Attack',
     items: { weapon: 'Alatreon Madness', ...IB_ELEM_ARMOR, charm: 'Wyrmsbane Charm V' },
@@ -130,7 +130,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-hammer-late',
-    name: 'IB Hammer late game',
+    name: 'Hammer IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Agitator / WEX / Crit Boost',
     items: { weapon: 'Fatalis Demolisher', ...IB_RAW_ARMOR },
@@ -138,7 +138,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-hh-late',
-    name: 'IB HH late game',
+    name: 'HH IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Agitator / WEX / Crit Boost',
     items: { weapon: 'Fatalis Menace Wailer', ...IB_RAW_ARMOR },
@@ -146,7 +146,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-lance-late',
-    name: 'IB Lance late game',
+    name: 'Lance IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Guard / Guard Up / Offensive Guard',
     items: { weapon: 'True Fatalis Lance', ...IB_RAW_ARMOR },
@@ -158,7 +158,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-gl-late',
-    name: 'IB GL late game',
+    name: 'GL IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Artillery, Agitator / Crit Boost',
     items: { weapon: 'True Fatalis Gunlance', ...IB_RAW_ARMOR },
@@ -166,7 +166,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-sa-late',
-    name: 'IB SA late game',
+    name: 'SA IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Agitator / WEX / Crit Boost',
     items: { weapon: 'True Fatalis End', ...IB_RAW_ARMOR },
@@ -174,7 +174,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-cb-late',
-    name: 'IB CB late game',
+    name: 'CB IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Artillery, Agitator / Crit Boost',
     items: { weapon: 'True Fatalis Charger', ...IB_RAW_ARMOR },
@@ -182,7 +182,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-ig-late',
-    name: 'IB IG late game',
+    name: 'IG IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, Agitator / WEX / Crit Boost',
     items: { weapon: 'True Fatalis Dyaus', ...IB_RAW_ARMOR },
@@ -190,7 +190,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-lbg-late',
-    name: 'IB LBG late game',
+    name: 'LBG IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, ammo-up skills, Agitator / Crit Boost',
     items: { weapon: 'Fatalis Depths', ...IB_RAW_ARMOR },
@@ -198,7 +198,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-hbg-late',
-    name: 'IB HBG late game',
+    name: 'HBG IB late game',
     group: 'iceborne',
     note: 'Fatalis + Raging Brachy, ammo-up skills, Agitator / Crit Boost',
     items: { weapon: 'Vor Buster', ...IB_RAW_ARMOR },
@@ -206,7 +206,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-bow-late-element',
-    name: 'IB Bow late game (element)',
+    name: 'Bow IB late game (element)',
     group: 'iceborne',
     note: 'Alatreon bow, Silver Sol True Crit Element, Dragon Attack',
     items: { weapon: 'Alatreon Commandment', ...IB_ELEM_ARMOR, charm: 'Wyrmsbane Charm V' },
@@ -216,7 +216,7 @@ export const PRESETS: PresetDef[] = [
   // ── Base game late game ──
   {
     slug: 'base-gs-late',
-    name: 'Base GS late game',
+    name: 'GS base late game',
     group: 'base',
     note: "Teostra Master's Touch + Drachen, Crit Eye / WEX / Attack",
     items: { weapon: 'Purgation\'s Atrocity', ...BASE_RAW_ARMOR },
@@ -224,7 +224,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'base-ls-late',
-    name: 'Base LS late game',
+    name: 'LS base late game',
     group: 'base',
     note: "Teostra Master's Touch + Drachen, Crit Eye / WEX / Attack",
     items: { weapon: "Extermination's Edge", ...BASE_RAW_ARMOR },
@@ -232,7 +232,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'base-hammer-late',
-    name: 'Base Hammer late game',
+    name: 'Hammer base late game',
     group: 'base',
     note: "Teostra Master's Touch + Drachen, Crit Eye / WEX / Attack",
     items: { weapon: "Obliteration's Footfall", ...BASE_RAW_ARMOR },
@@ -240,7 +240,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'base-lance-late',
-    name: 'Base Lance late game',
+    name: 'Lance base late game',
     group: 'base',
     note: "Teostra Master's Touch + Drachen, Guard, Crit Eye / WEX",
     items: { weapon: "Perdition's Hand", ...BASE_RAW_ARMOR },
@@ -248,7 +248,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'base-cb-late',
-    name: 'Base CB late game',
+    name: 'CB base late game',
     group: 'base',
     note: "Teostra Master's Touch + Drachen, Artillery, Crit Eye / WEX",
     items: { weapon: "Devastation's Thorns", ...BASE_RAW_ARMOR },
@@ -256,7 +256,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'base-hbg-late',
-    name: 'Base HBG late game',
+    name: 'HBG base late game',
     group: 'base',
     note: 'Teostra + Drachen, Normal Shots, Crit Eye / WEX / Attack',
     items: { weapon: "Destruction's Fusillade", ...BASE_RAW_ARMOR },
@@ -264,7 +264,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'base-db-late-element',
-    name: 'Base DB late game (element)',
+    name: 'DB base late game (element)',
     group: 'base',
     note: 'Fire and Ice, Rathalos Critical Element, Ice Attack',
     items: { weapon: 'Fire and Ice', ...baseIce.armor, charm: 'Frost Charm V' },
@@ -272,7 +272,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'base-bow-late-element',
-    name: 'Base Bow late game (element)',
+    name: 'Bow base late game (element)',
     group: 'base',
     note: 'Legiana bow, Rathalos Critical Element, Ice Attack',
     items: { weapon: 'Legia Snowfletcher', ...baseIce.armor, charm: 'Frost Charm V' },
@@ -282,7 +282,7 @@ export const PRESETS: PresetDef[] = [
   // ── Early / mid game ──
   {
     slug: 'base-ls-lr-early',
-    name: 'Base LS early game (LR)',
+    name: 'LS base early game (LR)',
     group: 'progression',
     note: 'Low Rank bone gear, Attack / Crit Eye',
     items: {
@@ -296,7 +296,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'base-gs-hr-early',
-    name: 'Base GS early game (HR)',
+    name: 'GS base early game (HR)',
     group: 'progression',
     note: 'Rathalos / Odogaron mix, Attack / WEX / Crit Eye',
     items: {
@@ -318,7 +318,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'base-hammer-hr-mid',
-    name: 'Base Hammer mid game (HR)',
+    name: 'Hammer base mid game (HR)',
     group: 'progression',
     note: 'Nergigante / Rathalos mix, Agitator / Attack / WEX',
     items: {
@@ -340,7 +340,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-ls-mr-early',
-    name: 'IB LS early game (MR)',
+    name: 'LS IB early game (MR)',
     group: 'progression',
     note: 'Tigrex / Banbaro / Fulgur mix, Attack / WEX',
     items: {
@@ -362,7 +362,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-bow-mr-early',
-    name: 'IB Bow early game (MR)',
+    name: 'Bow IB early game (MR)',
     group: 'progression',
     note: 'Nargacuga set, Evade Window / Water Attack',
     items: {
@@ -385,7 +385,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-gs-mr-mid',
-    name: 'IB GS mid game (MR)',
+    name: 'GS IB mid game (MR)',
     group: 'progression',
     note: 'Brachydios 3 (Agitator Secret) + Garuga, Agitator / WEX / Crit Eye',
     items: {
@@ -407,7 +407,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-db-mr-mid-element',
-    name: 'IB DB mid game (element)',
+    name: 'DB IB mid game (element)',
     group: 'progression',
     note: 'Velkhana 4 (Critical Element) + Garuga, Ice Attack',
     items: {
@@ -429,7 +429,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-cb-mr-mid',
-    name: 'IB CB mid game (MR)',
+    name: 'CB IB mid game (MR)',
     group: 'progression',
     note: 'Glavenus 3 (Max Might Secret) + Garuga, Artillery / Crit Eye',
     items: {
@@ -452,7 +452,7 @@ export const PRESETS: PresetDef[] = [
   },
   {
     slug: 'ib-lbg-mr-mid',
-    name: 'IB LBG mid game (MR)',
+    name: 'LBG IB mid game (MR)',
     group: 'progression',
     note: "Rath Soul 3 (Mind's Eye / Ballistics) + Garuga, Crit Eye / Crit Boost",
     items: {

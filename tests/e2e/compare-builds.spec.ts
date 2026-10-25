@@ -81,10 +81,10 @@ test('compare picker: presets tab, full at 3, Esc closes it', async ({ page }) =
 
   await page.getByTestId('compare-add').click()
   await picker.getByTestId('builds-tab-presets').click()
-  await picker.getByTestId('pick-build').filter({ hasText: 'IB LS late game' }).click()
+  await picker.getByTestId('pick-build').filter({ hasText: 'LS IB late game' }).click()
   await page.getByTestId('compare-add').click()
   await picker.getByTestId('builds-tab-presets').click()
-  await picker.getByTestId('pick-build').filter({ hasText: 'IB GS late game' }).click()
+  await picker.getByTestId('pick-build').filter({ hasText: 'GS IB late game' }).click()
   await page.getByTestId('compare-add').click()
   await picker.getByTestId('builds-tab-saved').click()
   await picker.getByTestId('pick-build').filter({ hasText: 'Weak' }).click()

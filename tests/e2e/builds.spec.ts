@@ -62,11 +62,11 @@ test('presets tab: load a preset, compare it, keyboard and remembered tab', asyn
   await expect(list).toContainText('Iceborne late game')
   await expect(list).toContainText('Base game late game')
   await expect(list).toContainText('Early & mid game')
-  const ls = page.getByTestId('preset-build').filter({ hasText: 'IB LS late game' })
+  const ls = page.getByTestId('preset-build').filter({ hasText: 'LS IB late game' })
   await expect(ls).toContainText('Fatalis Zaggespanon')
 
   await ls.getByTestId('load-preset').click()
-  await expect(page.getByTestId('confirm-dialog')).toContainText('IB LS late game replaces the current build.')
+  await expect(page.getByTestId('confirm-dialog')).toContainText('LS IB late game replaces the current build.')
   await page.getByTestId('confirm-yes').click()
   await expectSlot(page, 'weapon', 'Fatalis Zaggespanon')
   await expectSlot(page, 'chest', 'Dragonhide β+')
@@ -78,8 +78,8 @@ test('presets tab: load a preset, compare it, keyboard and remembered tab', asyn
   await page.getByTestId('compare-add').click()
   const picker = page.getByTestId('compare-picker')
   await picker.getByTestId('builds-tab-presets').click()
-  await picker.getByTestId('pick-build').filter({ hasText: 'IB LS late game' }).click()
-  await expect(page.getByTestId('compare-column').nth(1)).toContainText('IB LS late game')
+  await picker.getByTestId('pick-build').filter({ hasText: 'LS IB late game' }).click()
+  await expect(page.getByTestId('compare-column').nth(1)).toContainText('LS IB late game')
 
   // tab is remembered; keyboard: Enter on a tab, arrow down into the list
   await page.reload()
@@ -96,7 +96,7 @@ test('presets tab: load a preset, compare it, keyboard and remembered tab', asyn
   await page.keyboard.press('ArrowLeft')
   await expect(page.getByTestId('load-preset').first()).toBeFocused()
   await page.keyboard.press('Enter')
-  await expect(page.getByTestId('confirm-dialog')).toContainText('IB GS late game')
+  await expect(page.getByTestId('confirm-dialog')).toContainText('GS IB late game')
 })
 
 test('share link per build row copies that build, not the current one', async ({ page, browser, context }) => {
